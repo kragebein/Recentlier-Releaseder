@@ -11,6 +11,7 @@ class spot():
     def __init__(self):
         conf = _conf()
         self.tracklist = {}
+        self.popped = []
         self.plname = conf.playlist_name
         self.plsize = conf.playlist_size
         self.follow = []
@@ -24,8 +25,8 @@ class spot():
         self.artist_singles = {}
         self.data = []
         self.username = self.getusername()
-        self.cid = ''    # Client ID
-        self.cic = ''    # Client Secret
+        self.cid = 'bcfe42433d1a4fa6b423d75545d87b09'    # Client ID
+        self.cic = '5f2f7290646d40879cc5f2907a218413'    # Client Secret
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.callback = 'https://www.lazywack.no'
         try: 
@@ -178,6 +179,7 @@ class spot():
                 length = len(one_sorted)
                 for i in one_sorted[1:length]:
                     self.tracklist['tracks'].pop(i[0])
+                    self.popped.append(i[0])
                     dupe_count +=1
                     
         # populate the unsorted list with a tuple
@@ -252,3 +254,6 @@ class spot():
             print('Updated playlist with {} tracks'.format(self.plsize))
         except Exception:
             traceback.print_exc()
+            
+    def get_single_track_details(self, i):
+        return json.dumps(self.sp.track(i), indent=2)

@@ -5,7 +5,6 @@ import spotipy.util as util
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, track_name
 
-
 class spot():
     def __init__(self):
         conf = _conf()
@@ -151,8 +150,11 @@ class spot():
         ''' sort all the data we have retrieved from spotify '''
         dump = _dump()
         self.unsorted = {}
+        
+        # needed for debugging:
         #if dump:
             #self.tracklist.update({'tracks': dump['tracks']})
+
         track = self.tracklist['tracks']
         # Find and remove new instances of older tracks
         dupe_count = 0

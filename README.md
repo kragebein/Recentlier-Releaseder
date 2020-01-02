@@ -16,10 +16,10 @@ A json dump of the albums and tracks are stored locally and will be used the nex
 
 There is also a small configuration file:
 
->[PLAYLIST]
-name = Recentlier Releaseder
-size = 30
-[APPLICATION]
+>[PLAYLIST]  
+name = Recentlier Releaseder  
+size = 30  
+[APPLICATION]  
 update_interval = 0
 
 Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes.

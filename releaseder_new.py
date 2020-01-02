@@ -8,8 +8,7 @@ from recentlier.div import _dump, checkforupdate, track_name
 import traceback
 conf = _conf()
 def collect():
-    print('Recentlier Releaseder 0.6')
-    print('')
+    checkforupdate()
     def writedump():
         ''' write the dumpfile '''
         with open('dump.json', 'w') as dumpfile:

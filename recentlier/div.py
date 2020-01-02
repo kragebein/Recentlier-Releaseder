@@ -14,9 +14,10 @@ def _dump():
 
 def checkforupdate():
     config = conf()
-    version = '0.5'
-    plname = config.plname
-
+    with open('version', 'r') as version:
+        version = json.loads(version.read())
+    version = version['version']
+    plname = config.playlist_name
     def update(update):
         newversion = update['version']
         if newversion > version:
@@ -24,7 +25,7 @@ def checkforupdate():
         else:
             print(plname + ' v' + version)
     try:
-        f = requests.get('https://raw.githubusercontent.com/kragebein/Recentlier-Releaseder/master/version.txt')
+        f = requests.get('https://raw.githubusercontent.com/kragebein/Recentlier-Releaseder/master/version')
         upt = f.json()
     except:
         pass

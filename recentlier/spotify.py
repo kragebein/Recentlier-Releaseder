@@ -2,7 +2,6 @@
 ''' Spotify API file '''
 import json, re, requests, spotipy.util, os, sys, datetime, traceback
 import spotipy.util as util
-from tqdm import trange, tqdm
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, track_name
 
@@ -25,8 +24,8 @@ class spot():
         self.artist_singles = {}
         self.data = []
         self.username = self.getusername()
-        self.cid = 'bcfe42433d1a4fa6b423d75545d87b09'    # Client ID
-        self.cic = '5f2f7290646d40879cc5f2907a218413'    # Client Secret
+        self.cid = ''    # Client ID
+        self.cic = ''    # Client Secret
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.callback = 'https://www.lazywack.no'
         try: 
@@ -254,6 +253,6 @@ class spot():
             print('Updated playlist with {} tracks'.format(self.plsize))
         except Exception:
             traceback.print_exc()
-            
+
     def get_single_track_details(self, i):
         return json.dumps(self.sp.track(i), indent=2)

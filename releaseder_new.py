@@ -8,6 +8,8 @@ from recentlier.div import _dump, checkforupdate, track_name
 import traceback
 conf = _conf()
 def collect():
+    print('Recentlier Releaseder 0.6')
+    print('')
     def writedump():
         ''' write the dumpfile '''
         with open('dump.json', 'w') as dumpfile:
@@ -23,9 +25,6 @@ def collect():
     track_data = {}
     albums = []
     buffer = []  
-    print('Recentlier Releaseder 0.5')
-    print('')
-    #unit_scale=False, desc='Artists'
     print('Working with: ', end='')
     for artist in collector.get_artists():
         follow_name = artist['name']

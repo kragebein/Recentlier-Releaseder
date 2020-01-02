@@ -1,0 +1,9 @@
+.user
+.*cache*
+releaseder.py
+test.py
+.vscode
+config.ini
+dump.json
+*cache*
+*.pyc

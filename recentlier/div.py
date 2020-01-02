@@ -18,6 +18,7 @@ def checkforupdate():
         version = json.loads(version.read())
     version = version['version']
     plname = config.playlist_name
+
     def update(update):
         newversion = update['version']
         if newversion > version:

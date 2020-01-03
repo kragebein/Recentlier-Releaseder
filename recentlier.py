@@ -16,6 +16,7 @@ def collect():
             dumpfile.write(tracklist)
             dumpfile.close()
     dump = _dump()
+    
     found_item = False
     c = 0
     t = 0

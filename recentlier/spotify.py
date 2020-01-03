@@ -158,6 +158,7 @@ class spot():
             #self.tracklist.update({'tracks': dump['tracks']})
 
         track = self.tracklist['tracks']
+
         # Find and remove new instances of older tracks
         dupe_count = 0
         for i in track.copy():
@@ -194,7 +195,6 @@ class spot():
                 pop.append(i)
         for i in pop:
             self.unsorted.pop(i)
-
         self.sorted = sorted(self.unsorted.items(), key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=True)
         try:
             self.playlist_new = []
@@ -208,25 +208,25 @@ class spot():
             raise Exception
 
     def diff(self, first, second):
+        ''' Compare list types '''
         return [item for item in first if item not in second]
 
     def updateplaylist(self):
         ''' 
-        Gracefully update the already populated playlist.
-        If playlist is empty, all sorted tracks will be dumped into playlist.
+        Actuallay fill up the playlist. If playlist has data, 
 
         '''
         # Collect the datasets
         playlist = self.sort()
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
-
         length = len(playlist_tracks['items'])
+
         # if empty, add everything to playlist
         if length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
-                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+                print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # Add, remove, compare and adjust. 
@@ -238,8 +238,8 @@ class spot():
         comparison = self.diff(current_id, playlist)
         in_tracks = self.diff(playlist, current_id)
 
+        # sorted data is identical to online playlist
         if current_id == playlist:
-            # sorted data is identical to online playlist
             print('Online playlist and local sorted list are the same.')
             return True
 
@@ -248,7 +248,7 @@ class spot():
             print('Flushing playlist.')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in playlist:
-                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+                print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # We dont need to do anything, how have the user even reached this code?
@@ -256,15 +256,15 @@ class spot():
             print('Playlist doesnt need updating, local list and playlist are the same size.')
             return True
         
+        # Gracefully update the playlist. 
         if len(comparison) > 1:
-            # Gracefully update the playlist. 
             print('There are {} new tracks'.format(len(comparison)))
             start_pos = int(self.plsize) - len(comparison)
             for i in set(playlist).difference(current_id):
-                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+                print('[+] {}'.format(track_name(self.tracklist, i)))
             print('')
             for i in comparison:
-                print('[-] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+                print('[-] {}'.format(track_name(self.tracklist, i)))
             self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
             for i in in_tracks: # Adjust the position of the newly added tracks
@@ -286,4 +286,5 @@ class spot():
             traceback.print_exc()
 
     def get_single_track_details(self, i):
+        '''Just print the data from this single track'''
         return json.dumps(self.sp.track(i), indent=2)

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 ''' Spotify API file '''
-import json, re, requests, spotipy.util, os, sys, datetime, traceback
+import json, re, requests, spotipy.util, os, sys, datetime, traceback, time
 import spotipy.util as util
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, track_name
+
 
 class spot():
     def __init__(self):
@@ -142,6 +143,7 @@ class spot():
             playlist_id
         except NameError:
             playlist_create = self.sp.user_playlist_create(self.myid, self.plname, public=False)
+            self.sp.user_playlist
             playlist_id = playlist_create['id']
         self.tracklist.update({'playlist_id': playlist_id})
         return playlist_id
@@ -151,7 +153,7 @@ class spot():
         dump = _dump()
         self.unsorted = {}
         
-        # needed for debugging:
+        # needed for debugging
         #if dump:
             #self.tracklist.update({'tracks': dump['tracks']})
 
@@ -205,6 +207,9 @@ class spot():
             traceback.print_exc()
             raise Exception
 
+    def diff(self, first, second):
+        return [item for item in first if item not in second]
+
     def updateplaylist(self):
         ''' 
         Gracefully update the already populated playlist.
@@ -221,36 +226,60 @@ class spot():
         if length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
-                print('[+] {}'.format(track_name(self.tracklist, i)))
+                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+            return True
 
-        # concatenate and compare
+        # Add, remove, compare and adjust. 
         current_id = []
         for track in playlist_tracks['items']:
             current_id.append(track['track']['id'])
-        comparison = set(current_id).difference(playlist)
+        comparison = []
+        in_tracks = []
+        comparison = self.diff(current_id, playlist)
+        in_tracks = self.diff(playlist, current_id)
 
-        # If the entire playlist needs to be updated, just replace everything instead of gracefully moving.
+        if current_id == playlist:
+            # sorted data is identical to online playlist
+            print('Online playlist and local sorted list are the same.')
+            return True
+
+        # If we need to update everything, might as well just swap out everything.
         if len(comparison) > int(self.plsize): # self.plsize
             print('Flushing playlist.')
-            self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, current_id)
-            self.addtoplaylist(playlist_id, playlist)
+            self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
+            for i in playlist:
+                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+            return True
+
         # We dont need to do anything, how have the user even reached this code?
         if len(comparison) == self.plsize:
-            print('Playlist doesnt need updating, local list and playlist are the same size.\n{}exiting, also what are you doing here?')
+            print('Playlist doesnt need updating, local list and playlist are the same size.')
+            return True
         
         if len(comparison) > 1:
+            # Gracefully update the playlist. 
             print('There are {} new tracks'.format(len(comparison)))
+            start_pos = int(self.plsize) - len(comparison)
             for i in set(playlist).difference(current_id):
-                print('[+] {}'.format(track_name(self.tracklist, i)))
+                print('[+] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+            print('')
             for i in comparison:
-                print('[-] {}'.format(track_name(self.tracklist, i)))
-            self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, current_id)
-            self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
-        
+                print('[-] {}'.format(track_name(self.tracklist, i).decode('utf-8')))
+            self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
+            self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
+            for i in in_tracks: # Adjust the position of the newly added tracks
+                for placement, trackid in enumerate(playlist):
+                    if i == trackid:
+                        self.sp.user_playlist_reorder_tracks(self.myid, playlist_id, start_pos, placement)
+                        start_pos +=1
+                        break 
+                    else:
+                        continue
+            return True
+
     def addtoplaylist(self, playlist_id, playlist):
         ''' dump sorted tracks into playlist'''
         try:
-            #playlist_id = self.genplaylist() # run genplaylist to locate or generate the playlist.
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
             print('Updated playlist with {} tracks'.format(self.plsize))
         except Exception:

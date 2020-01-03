@@ -15,7 +15,6 @@ def collect():
             tracklist = json.dumps(collector.tracklist, indent=2, sort_keys=True)
             dumpfile.write(tracklist)
             dumpfile.close()
-
     dump = _dump()
     found_item = False
     c = 0
@@ -68,7 +67,6 @@ def collect():
             collector.tracklist['tracks'].update({i: track_data[i]})
         for i in collector.popped:
             collector.tracklist['popped'].append(i)
-        #collector.tracklist.update({'tracks': track_data, 'albums': albums})
         collector.updateplaylist()
         writedump()
         return True
@@ -82,7 +80,9 @@ def collect():
         return True
 
 #collector = spot()
-#print(collector.get_single_track_details('2LeWpFQO55js4AGJwaGzBR'))
+#collector.updateplaylist()
+#collector.sort()
+#print(track_name(collector.tracklist, '77QWWaZ0Mxue58liGkUzoo').decode('utf-8'))
 #quit()
 
 if int(conf.loop) is not 0:
@@ -97,4 +97,4 @@ else:
     collect() #run 
 
 if os.name == 'nt':
-    input('<ENTER> to close window.')
+    input('Press enter to close window.')

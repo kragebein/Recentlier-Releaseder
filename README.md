@@ -8,9 +8,9 @@ Unlike spotify's "Recently Released"-list that is dynamically updated based on s
 The tool tries to remove any duplicate tracks from labels that re-upload old songs instead of using the old tracks that already exists.
 
 It works by sifting through every album, every single and every track that your artists have published on spotify, it removes duplicates, sorts it by date and inserts the newest tracks into your list. 
-The exe is made using PyInstaller using --onefile and will likely trigger every security feature windows has if you try to download and run it. 
 
 A json dump of the albums and tracks are stored locally and will be used the next time recentlier is beeing run. Delete it to start fresh.
+
  Files created locally:
 > .user, dump.json, .cache-\<username\>
 

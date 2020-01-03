@@ -42,9 +42,9 @@ def track_name(list, i):
         artist = list['tracks'][i][2]
         track = list['tracks'][i][3]
         rel_date = list['tracks'][i][5]
-    except:
+    except Exception as r:
         artist = 'Unkown artist'
         track = 'unknown track'
-        rel_date = '?'
+        rel_date = '????-??-??'
         pass
-    return('({}) {} - {}'.format(rel_date, artist, track))
+    return('({}) {} - {}'.format(rel_date, artist, track).encode('utf-8'))

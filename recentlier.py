@@ -90,7 +90,11 @@ if int(conf.loop) != 0:
         collector = spot()
         try:
             collect() #run 
-        except:
+        except ConnectionError:
+            print('Max Retries exceeded. Trying again next loop.')
+            pass
+        except Exception as r:
+            print('Ran into som other issue:\n{}'.format(r))
             pass
         print('(#{}) Retrying in {} minutes.'.format(loop_count, conf.loop))
         time.sleep(minutes)

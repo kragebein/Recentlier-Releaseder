@@ -7,6 +7,7 @@ from recentlier.div import _dump, track_name
 
 
 class spot():
+    ''' Spot is the class that handles the spotify API and returns neccecary data for this program to function '''
     def __init__(self):
         conf = _conf()
         self.tracklist = {}
@@ -23,19 +24,28 @@ class spot():
         self.artist_albums = {}
         self.artist_singles = {}
         self.data = []
+        self.sp = ''
         self.username = self.getusername()
+
         self.cid = ''    # Client ID
         self.cic = ''    # Client Secret
+
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.callback = 'https://www.lazywack.no'
         try: 
             token = util.prompt_for_user_token(self.username, \
                 self.scope, client_id=self.cid, client_secret=self.cic, \
                 redirect_uri=self.callback)
-        except Exception as r:
-            raise('Couldnt retrieve token!\n{}'.format(r))
-        if token:
-            self.sp = spotipy.Spotify(auth=token)
+        except Exception as r: 
+            print('Unable to log you in. \n\nTraceback: {}'.format(r))
+            exit()
+        try:
+            if token:
+                self.sp = spotipy.Spotify(auth=token)
+        except:
+            print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
+            exit()
+       
         mydata = self.sp.me()
         self.myid = mydata['id']
 
@@ -83,7 +93,7 @@ class spot():
                 break
         
     def get_albums(self, artist):
-        ''' albums generator '''
+        ''' albums and singles generator '''
         self.get_albums_singles(artist)
         result = self.sp.artist_albums(artist, limit=50, album_type='album')
         self.artist_albums.update(result)
@@ -164,13 +174,13 @@ class spot():
         for i in track.copy():
             print('\r{} duplicates removed..'.format(dupe_count), end='', flush=True)
             dupes = {}
-            try: # we'll try it first, in case we are trying to iterate over a removed duplicate
+            try: 
                 artist_id = track[i][4]
                 track_name = track[i][3]
                 release_date = track[i][5]
             except:
                 break
-            for dupe in track.copy():
+            for dupe in track.copy():                       # == for exact match - use 'is' for aproximate match                     
                 if artist_id in track[dupe][4] and track_name == track[dupe][3] and release_date != track[dupe][5] and len(track[dupe][5]) != 4:
                     dupes.update({dupe: track[dupe][5]})
                     dupe_count +=1
@@ -214,7 +224,6 @@ class spot():
     def updateplaylist(self):
         ''' 
         Actuallay fill up the playlist. If playlist has data, 
-
         '''
         # Collect the datasets
         playlist = self.sort()

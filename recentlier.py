@@ -82,17 +82,19 @@ def collect():
 
 #collector = spot()
 #collector.updateplaylist()
-#collector.sort()
-#print(track_name(collector.tracklist, '77QWWaZ0Mxue58liGkUzoo').decode('utf-8'))
-#quit()
 
-if int(conf.loop) is not 0:
+if int(conf.loop) != 0:
+    loop_count = 1
     minutes = int(conf.loop) * 60
     while True:
         collector = spot()
-        collect() #run 
-        print('Retrying in {} minutes.'.format(conf.loop))
+        try:
+            collect() #run 
+        except:
+            pass
+        print('(#{}) Retrying in {} minutes.'.format(loop_count, conf.loop))
         time.sleep(minutes)
+        loop_count +=1
 else:
     collector = spot()
     collect() #run 

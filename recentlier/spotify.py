@@ -7,7 +7,7 @@ from recentlier.div import _dump, track_name
 
 
 class spot():
-    ''' Spot is the class that handles the spotify API and returns neccecary data for this program to function '''
+    ''' Spot class handles all API queries towards spotify. '''
     def __init__(self):
         conf = _conf()
         self.tracklist = {}
@@ -26,10 +26,8 @@ class spot():
         self.data = []
         self.sp = ''
         self.username = self.getusername()
-
-        self.cid = ''    # Client ID
-        self.cic = ''    # Client Secret
-
+        self.cid = conf.cid 
+        self.cic = conf.cic
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.callback = 'https://www.lazywack.no'
         try: 

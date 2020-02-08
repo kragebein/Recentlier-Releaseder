@@ -24,8 +24,8 @@ It will stop execution after first time run to let you enter the client secret a
 name = Recentlier Releaseder  
 size = 30  
 [APPLICATION]  
-update_interval = 0
-client_secret = 
-client_id = 
+update_interval = 0  
+client_secret =   
+client_id =   
 
 Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes.

@@ -15,7 +15,7 @@ It works by sifting through every album, every single and every track that your 
 
 A json dump of the albums and tracks are stored locally and will be used the next time recentlier is beeing run. Delete it to start fresh.
 
- Files created locally:
+**Files created locally:**
 > .user  
 dump.json  
 .cache-\<username\>  

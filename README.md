@@ -3,9 +3,10 @@ A tool that sets up a playlist for you that gives you the latest tracks from the
 
 Unlike spotify's "Recently Released"-list that is dynamically updated based on several algorithms, this tool just gives you the latest tracks from the artists you actually follow. No less, no more. 
 
-> Requirements: Python 3.6 and modules: requests, spotipy
+**Requirements:**
+> Python 3.6 and modules: requests, spotipy
 
-*Installing:*
+**Installing:**
 > pip3 install -f requirements.txt
 
 The tool tries to remove any duplicate tracks from labels that re-upload old songs instead of using the old tracks that already exists.

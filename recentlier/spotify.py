@@ -28,8 +28,8 @@ class spot():
         self.username = self.getusername()
         self.cid = conf.cid 
         self.cic = conf.cic
+        self.callback = conf.callback
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
-        self.callback = 'https://www.lazywack.no'
         try: 
             token = util.prompt_for_user_token(self.username, \
                 self.scope, client_id=self.cid, client_secret=self.cic, \
@@ -158,10 +158,10 @@ class spot():
         
     def sort(self):
         ''' sort all the data we have retrieved from spotify '''
-        dump = _dump()
         self.unsorted = {}
         
         # needed for debugging
+        #dump = _dump()
         #if dump:
             #self.tracklist.update({'tracks': dump['tracks']})
 
@@ -213,7 +213,7 @@ class spot():
             return self.playlist_new
         except Exception:
             traceback.print_exc()
-            raise Exception
+            # - stop exceution if this important part fails
 
     def diff(self, first, second):
         ''' Compare list types '''

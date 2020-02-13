@@ -21,5 +21,5 @@ class conf():
         self.cid = application['client_id']
         self.callback = application['callback']
         if len(self.cid) < 1 or len(self.cic) < 1:
-            print('ERROR. YOU MUST UPDATE "self.cid" and "self.cic" in bot/spotify.py before you continue!')
+            print('ERROR. You must update "client_secret" and "client_id" in config.ini before you continue!')
             sys.exit(1)

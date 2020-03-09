@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 ''' Recently Releaseder '''
+# pylint: disable=no-name-in-module
 import json, re, requests, spotipy.util, os, sys, time
 import spotipy.util as util
 from recentlier.spotify import spot
@@ -12,6 +13,7 @@ def collect():
     def writedump():
         ''' write the dumpfile '''
         with open('dump.json', 'w') as dumpfile:
+            # We Lets sort and set up indent for this
             tracklist = json.dumps(collector.tracklist, indent=2, sort_keys=True)
             dumpfile.write(tracklist)
             dumpfile.close()
@@ -24,10 +26,8 @@ def collect():
     track_data = {}
     albums = []
     buffer = []  
-    print('Working with: ', end='')
     for artist in collector.get_artists():
         follow_name = artist['name']
-        print('{}, '.format(follow_name), end='', flush=True)
         a +=1
         for album in collector.get_albums(artist['id']):
             if dump:
@@ -53,9 +53,8 @@ def collect():
                                 del buffer[:]
     
                             
-    print('')
+
     if dump and found_item is False:
-        print('No new updates found. Not doing anything.')
         return True
     elif not dump and not found_item:
         print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')
@@ -79,10 +78,8 @@ def collect():
     else:
         print('We met an unkonwn condition, exiting')
         return True
-
 #collector = spot()
 #collector.updateplaylist()
-
 if int(conf.loop) != 0:
     loop_count = 1
     minutes = int(conf.loop) * 60
@@ -96,12 +93,11 @@ if int(conf.loop) != 0:
         except Exception as r:
             print('Ran into som other issue:\n{}'.format(r))
             pass
-        print('(#{}) Retrying in {} minutes.'.format(loop_count, conf.loop))
+        print('\r#{}'.format(loop_count), end='', flush=True)
         time.sleep(minutes)
         loop_count +=1
 else:
     collector = spot()
     collect() #run 
-
 if os.name == 'nt':
     input('Press enter to close window.')

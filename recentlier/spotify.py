@@ -23,6 +23,8 @@ class spot():
         self.track_details_total = ''
         self.artist_albums = {}
         self.artist_singles = {}
+        self.artist_collection = {}
+        self.artist_appears_on = {}
         self.data = []
         self.sp = ''
         self.username = self.getusername()
@@ -80,6 +82,24 @@ class spot():
         for i in follow_data['artists']['items']:
             yield i
 
+    def get_collection(self, artist):
+        result = self.sp.artist_albums(artist, limit=50, album_type='collection')
+        self.artist_collection.update(result)
+        while 'next' in result and result['next'] is not None:
+            result = self.sp.next(result)
+            for i in result['items']:
+                self.artist_collection['items'].append(i)
+            if result['next'] is None:
+                break
+    def get_appears_on(self, artist):
+        result = self.sp.artist_albums(artist, limit=50, album_type='single')
+        self.artist_appears_on.update(result)
+        while 'next' in result and result['next'] is not None:
+            result = self.sp.next(result)
+            for i in result['items']:
+                self.artist_appears_on['items'].append(i)
+            if result['next'] is None:
+                break
     def get_albums_singles(self, artist):
         result = self.sp.artist_albums(artist, limit=50, album_type='single')
         self.artist_singles.update(result)
@@ -106,6 +126,10 @@ class spot():
             yield i
         for i in self.artist_albums['items']:
             yield i
+        #for i in self.artist_collection['items']:
+        #    yield i
+        #for i in self.artist_appears_on['items']:
+        #    yield i
 
     def get_tracks(self, album):
         ''' album tracks generator '''

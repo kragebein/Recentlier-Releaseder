@@ -27,7 +27,6 @@ def collect():
     albums = []
     buffer = []  
     for artist in collector.get_artists():
-        follow_name = artist['name']
         a +=1
         for album in collector.get_albums(artist['id']):
             if dump:
@@ -91,8 +90,7 @@ if int(conf.loop) != 0:
             print('Max Retries exceeded. Trying again next loop.')
             pass
         except Exception as r:
-            print('Ran into som other issue:\n{}'.format(r))
-            pass
+            traceback.print_exc()
         print('\r#{}'.format(loop_count), end='', flush=True)
         time.sleep(minutes)
         loop_count +=1

@@ -8,8 +8,8 @@ from recentlier.config import conf as _conf
 from recentlier.div import _dump, checkforupdate, track_name
 import traceback
 conf = _conf()
+checkforupdate()
 def collect():
-    checkforupdate()
     def writedump():
         ''' write the dumpfile '''
         with open('dump.json', 'w') as dumpfile:
@@ -83,15 +83,15 @@ if int(conf.loop) != 0:
     loop_count = 1
     minutes = int(conf.loop) * 60
     while True:
-        collector = spot()
         try:
+            collector = spot()
             collect() #run 
         except ConnectionError:
             print('Max Retries exceeded. Trying again next loop.')
             pass
         except Exception as r:
             traceback.print_exc()
-        print('\r#{}'.format(loop_count), end='', flush=True)
+        #print('\r#{}'.format(loop_count), end='', flush=True)
         time.sleep(minutes)
         loop_count +=1
 else:

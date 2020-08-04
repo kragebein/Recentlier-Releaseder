@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 ''' Some other classes '''
 import os, re, json, requests
+
 from recentlier.config import conf
 
 def _dump():
@@ -25,6 +26,7 @@ def checkforupdate():
             print('{} v{}\nNew version available: v{}\nGet it here: https://github.com/kragebein/Recentlier-Releaseder'.format(plname, version, newversion))
         else:
             print(plname + ' v' + version)
+            print('(recentlier is always running in the background)')
     try:
         f = requests.get('https://raw.githubusercontent.com/kragebein/Recentlier-Releaseder/master/version')
         upt = f.json()

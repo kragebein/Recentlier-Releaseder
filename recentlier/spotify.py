@@ -63,7 +63,7 @@ class spot():
             with open('.user', 'w') as ussr:
                 ussr.write(json.dumps({'username': username}))
             return username
-        
+    
     def get_artists(self):
         ''' Artists generator'''
         follow_data = {}
@@ -190,7 +190,6 @@ class spot():
             #self.tracklist.update({'tracks': dump['tracks']})
 
         track = self.tracklist['tracks']
-
         # Find and remove new instances of older tracks
         dupe_count = 0
         for i in track.copy():

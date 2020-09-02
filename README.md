@@ -3,6 +3,14 @@ A tool that sets up a playlist for you that gives you the latest tracks from the
 
 Unlike spotify's "Recently Released"-list that is dynamically updated based on several algorithms, this tool just gives you the latest tracks from the artists you actually follow. No less, no more. 
 
+
+**Latest updates**
+1.4:
+Releaseder now creates a local cache of the spotify API. I recommend to delete dump.json and let recentlier build this cache from scratch. 
+For all new transactions with spotify API, releaseder will store a local copy of that transaction, so next time recentlier runs, it will not expend transactions on the API, but instead use the locally stored cache. It will always look for new content though.
+Will create a new file: cache.db
+
+
 **Requirements:**
 > Python 3.6 and modules: requests, spotipy
 

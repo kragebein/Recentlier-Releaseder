@@ -3,10 +3,14 @@
 # pylint: disable=no-name-in-module
 import json, re, requests, spotipy.util, os, sys, time
 import spotipy.util as util
+from spotipy.client import Spotify # new
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, checkforupdate, track_name
+from spotipy import SpotifyException
 import traceback
+
+
 conf = _conf()
 checkforupdate()
 def collect():
@@ -49,9 +53,7 @@ def collect():
                                 found_item = True
                                 t +=0
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
-                                del buffer[:]
-    
-                            
+                                del buffer[:]                          
 
     if dump and found_item is False:
         return True

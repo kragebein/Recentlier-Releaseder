@@ -75,14 +75,16 @@ class spot():
 
     def db(self, url, method, value=None):
         prefix = "https://api.spotify.com/v1/"
-        url = prefix + url
-        if url != 'https://api.spotify.com/v1/me/following':
-            if method == 'get':
-                query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
-                data = self.sql.execute(query).fetchone()
-
-                return data[0] if data is not None else False
-            elif method == 'put':
+        if not url.startswith('http'):
+            url = prefix + url
+        if method == 'get':
+            query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
+            data = self.sql.execute(query).fetchone()
+            print('SQL: fetching {}'.format(url))
+            return data[0] if data is not None else False
+        elif method == 'put':
+            if url != 'https://api.spotify.com/v1/me/following':
+                print('SQL: putting {}'.format(url))
                 query = 'INSERT INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
@@ -110,11 +112,10 @@ class spot():
         result = self.sp.current_user_followed_artists(limit=50)
         follow_data.update(result)
         while 'next' in result['artists'] and result['artists']['next'] is not None:
-            resulty = self.sp.next(result['artists'])
-            for i in resulty['artists']['items']:
+            result = self.sp.next(result['artists'])
+            for i in result['artists']['items']:
                 follow_data['artists']['items'].append(i)
-            _next = resulty['artists']['next']
-            if resulty['artists']['next'] is None:
+            if result['artists']['next'] is None:
                 break
         for i in follow_data['artists']['items']:
             self.follow.append(i['id'])

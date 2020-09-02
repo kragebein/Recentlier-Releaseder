@@ -80,11 +80,11 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url) )
+#            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url) )
             return data[0] if data is not None else False
         elif method == 'put':
-            if url != 'https://api.spotify.com/v1/me/following':
-                print('SQL: putting {}'.format(url))
+            if 'https://api.spotify.com/v1/me/following' not in url:
+#                print('SQL: putting {}'.format(url))
                 query = 'INSERT INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()

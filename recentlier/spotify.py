@@ -83,13 +83,11 @@ class spot():
 #            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url) )
             return data[0] if data is not None else False
         elif method == 'put':
-            if 'https://api.spotify.com/v1/me/following' not in url:
+            if 'https://api.spotify.com/v1/me/following' not in url or 'playlists' not in url:
 #                print('SQL: putting {}'.format(url))
                 query = 'INSERT INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
-        
-
 
     def getusername(self):
         '''Will fill the username variable'''

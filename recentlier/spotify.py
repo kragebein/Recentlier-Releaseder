@@ -80,7 +80,7 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-            print('SQL: fetching {}'.format(url))
+            print('SQL: fetching {} (API)'.format(url) if data is not None else 'SQL: fetching {} (Cache)'.format(url) )
             return data[0] if data is not None else False
         elif method == 'put':
             if url != 'https://api.spotify.com/v1/me/following':

@@ -5,6 +5,7 @@ Unlike spotify's "Recently Released"-list that is dynamically updated based on s
 
 
 **Latest updates**
+
 1.4:
 Releaseder now creates a local cache of the spotify API. I recommend to delete dump.json and let recentlier build this cache from scratch. 
 For all new transactions with spotify API, releaseder will store a local copy of that transaction, so next time recentlier runs, it will not expend transactions on the API, but instead use the locally stored cache. It will always look for new content though.
@@ -27,6 +28,7 @@ A json dump of the albums and tracks are stored locally and will be used the nex
 > .user  
 dump.json  
 .cache-\<username\>  
+cache.db
 
 There is also a small configuration file which will be created the first time you run recentlier.
 It will stop execution after first time run to let you enter the client secret and client id in the config.

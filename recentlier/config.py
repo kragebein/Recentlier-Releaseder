@@ -8,7 +8,7 @@ class conf():
         if not os.path.exists(self.file):
             print('{} not found, creating default config..'.format(self.file))
             self.config['PLAYLIST'] = {'name' : 'Recentlier Releaseder','size' :30}
-            self.config['APPLICATION'] = {'update_interval': 0, 'client_secret': '', 'client_id': '', 'callback': 'http://www.lazywack.no'}
+            self.config['APPLICATION'] = {'update_interval': 0, 'client_secret': '', 'client_id': '', 'callback': 'http://www.lazywack.no', 'cache': 'yes'}
             with open(self.file, 'w') as configfile:
                 self.config.write(configfile)
         self.config.read(self.file)
@@ -20,6 +20,7 @@ class conf():
         self.cic = application['client_secret']
         self.cid = application['client_id']
         self.callback = application['callback']
+        self.cache = application['cache']
         if len(self.cid) < 1 or len(self.cic) < 1:
             print('ERROR. You must update "client_secret" and "client_id" in config.ini before you continue!')
             sys.exit(1)

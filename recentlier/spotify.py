@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 ''' Spotify API file '''
-import json, re, requests, spotipy.util, os, sys, datetime, traceback, time
+import json, re, requests, spotipy.util, os, sys, datetime, traceback, time, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, track_name
@@ -31,6 +31,8 @@ class spot():
         self.cid = conf.cid 
         self.cic = conf.cic
         self.callback = conf.callback
+        self.x = sqlite3.connect('cache.db')
+        self.sql = self.x.cursor()
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         try: 
             token = util.prompt_for_user_token(self.username, \
@@ -45,9 +47,47 @@ class spot():
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
+
+
        
         mydata = self.sp.me()
         self.myid = mydata['id']
+        # Enable or disable local cache through config.
+        if conf.cache.lower() == 'yes':
+            self.sp._get = self._get
+            self.sql.execute('CREATE TABLE IF NOT EXISTS cache (url TEXT, value BLOB);')
+            self.x.commit()
+
+    # rewrite spotipy internals to support local caching.
+    def _get(self, url, args=None, payload=None, **kwargs):   
+        if args:
+            kwargs.update(args)
+        _db = self.db(url, 'get')
+        if _db:
+            # This will look up every single transaction towards Spotify in the local cahche.
+            # If the cache for this particular url exists, we will return the data from the cahce instead. 
+
+            return json.loads(_db)
+        # if we dont have that data cached, we will intercept the data and add it to cache before returning it.
+        returndata = self.sp._internal_call("GET", url, payload, kwargs)
+        self.db(url, 'put', value=returndata) # write new data to cache.
+        return returndata
+
+    def db(self, url, method, value=None):
+        prefix = "https://api.spotify.com/v1/"
+        url = prefix + url
+        if url != 'https://api.spotify.com/v1/me/following':
+            if method == 'get':
+                query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
+                data = self.sql.execute(query).fetchone()
+
+                return data[0] if data is not None else False
+            elif method == 'put':
+                query = 'INSERT INTO cache VALUES(?, ?)'
+                self.sql.execute(query, [url, json.dumps(value)])
+                self.x.commit()
+        
+
 
     def getusername(self):
         '''Will fill the username variable'''

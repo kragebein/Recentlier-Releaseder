@@ -44,9 +44,100 @@ def track_name(list, i):
         artist = list['tracks'][i][2]
         track = list['tracks'][i][3]
         rel_date = list['tracks'][i][5]
-    except Exception as r:
+    except Exception:
         artist = 'Unkown artist'
         track = 'unknown track'
         rel_date = '????-??-??'
         pass
     return('({}) {} - {}'.format(rel_date, artist, track).encode('utf-8'))
+
+
+class Spinner():
+    def __init__(self, typ, pp):
+        ''' Possible types:
+        notes, penor, arrows, spinner, quarter, box'''
+        self.pp = pp # pre text, post text.
+        self.type = typ
+        self.ticks = 1
+        self.text = ''
+        self.spinner = { 'notes':
+            {
+        'tick': 8,
+        2: '♫        ♪',
+        1: ' ♫      ♪ ',
+        3: '   ♫  ♪   ',
+        4: '    ♫♪    ',
+        5: '    ♪♫    ',
+        6: '   ♪  ♫   ',
+        7: '  ♪    ♫  ',
+        8: ' ♪      ♫ ',
+            },
+        'penor': {
+        'tick': 16,
+        1: 'D         D',
+        2: '=D       Ɑ=',
+        3: '==D     Ɑ==',
+        4: '===D~  Ɑ===',
+        5: '===D ~ Ɑ===',
+        6: '===D  ~Ɑ===',
+        7: '8===D Ɑ===8',
+        8: '===D  ~Ɑ===',
+        9: '===D ~ Ɑ===',
+        10: '===D~  Ɑ===',
+        11: '===D   Ɑ===',
+        12: '===D   Ɑ===',
+        13: '==D     Ɑ==',
+        14: '=D       Ɑ=',
+        15: 'D         Ɑ',
+        16: '           '
+            },
+        'spinner': {
+        'tick': 4,
+        1: '|',
+        2: '/',
+        3: '—',
+        4: '\\'
+            },
+        'arrows': {
+            'tick': 8,
+            1: '←',
+            2: '↖',
+            3: '↑',
+            4: '↗',
+            5: '→',
+            6: '↘',
+            7: '↓',
+            8: '↙'
+            },
+        'quarter': {
+            'tick': 4,
+            1: "◜",
+            2: "◝",
+            3: "◞",
+            4: "◟"
+            },
+        'box': { 'tick': 4,
+            1: '◰',
+            2: '◳',
+            3: '◲',
+            4: '◱'
+            }
+        }
+
+    def tick(self, text):
+        self.text = text
+        if self.ticks >= self.spinner[self.type]['tick']:
+            self.ticks = 1
+        print('\r{} {}'.format(
+            self.spinner[self.type][self.ticks] if self.pp is 'post' else self.text, 
+            self.text if self.pp is 'post' else self.spinner[self.type][self.ticks]), end='', flush=True
+            )
+        self.ticks += 1
+
+    def end(self):
+        ''' clear old text, allow for new print to overwrite the spinner once done.'''
+        length = len(self.text) + len(self.spinner[self.type][1])
+        space = []
+        for x in range(0, length):
+            space.append(' ')
+        print('\r{}'.format(''.join(space)),end='', flush=True)

@@ -52,13 +52,18 @@ def track_name(list, i):
 
 
 class Spinner():
-    def __init__(self, typ, pp):
+    def __init__(self, typ, pp, static=0):
         ''' Possible types:
-        notes, penor, arrows, spinner, quarter, box'''
+        notes, penor, arrows, spinner, quarter, box, dna'''
+        if static == 1:
+            self.s = '\n'
+        else:
+            self.s = ''
         self.pp = pp # pre text, post text.
         self.type = typ
         self.ticks = 1
         self.text = ''
+        self.prevtext = ''
         self.spinner = { 'notes':
             {
         'tick': 8,
@@ -139,10 +144,16 @@ class Spinner():
         self.text = text
         if self.ticks >= self.spinner[self.type]['tick']:
             self.ticks = 1
-        print('\r{} {}'.format(
+        space = []
+        for x in range(0, len(self.prevtext)):
+            space.append(' ')
+        print('\r{} {}{}{}'.format(
             self.spinner[self.type][self.ticks] if self.pp is 0 else self.text, 
-            self.text if self.pp is 0 else self.spinner[self.type][self.ticks]), end='', flush=True
+            self.text if self.pp is 0 else self.spinner[self.type][self.ticks],
+            ''.join(space),
+            self.s), end='', flush=True
             )
+        self.prevtext = text
         self.ticks += 1
 
     def end(self):

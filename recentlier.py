@@ -6,10 +6,10 @@ import spotipy.util as util
 from spotipy.client import Spotify # new
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, checkforupdate, track_name
+from recentlier.div import _dump, checkforupdate, track_name, Spinner
 from spotipy import SpotifyException
+from datetime import datetime
 import traceback
-
 
 conf = _conf()
 checkforupdate()
@@ -22,6 +22,7 @@ def collect():
             dumpfile.write(tracklist)
             dumpfile.close()
     dump = _dump()
+    spin = Spinner('notes', 'pre')
     
     found_item = False
     c = 0
@@ -33,6 +34,7 @@ def collect():
     for artist in collector.get_artists():
         a +=1
         for album in collector.get_albums(artist['id']):
+            spin.tick(text='searching..') # loading bar text, leave empty for none
             if dump:
                 if album['id'] in dump['albums']:
                     break
@@ -53,13 +55,17 @@ def collect():
                                 found_item = True
                                 t +=0
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
-                                del buffer[:]                          
-
+                                del buffer[:]      
+            
+    spin.end()                    
     if dump and found_item is False:
-        return True
+        now = datetime.now()
+        nuh = now.strftime("%d/%m/%Y %H:%M:%S")
+        print('\r{}: Nothing new.'.format(nuh)) # \r 
+        return False
     elif not dump and not found_item:
         print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')
-        return True
+        return False
     elif dump and found_item:
         collector.tracklist.update({'username': collector.username, 'tracks': dump['tracks'], 'albums': dump['albums'], 'popped': dump['popped']}) # Include old dump
         for i in albums:
@@ -78,26 +84,34 @@ def collect():
         return True
     else:
         print('We met an unkonwn condition, exiting')
-        return True
-#collector = spot()
-#collector.updateplaylist()
+        return False
+# loop
+
 if int(conf.loop) != 0:
-    loop_count = 1
     minutes = int(conf.loop) * 60
+    countdown = minutes
+    spin = Spinner('quarter', 'post')
     while True:
         try:
             collector = spot()
-            collect() #run 
+            collect()
+                
         except ConnectionError:
             print('Max Retries exceeded. Trying again next loop.')
             pass
         except Exception as r:
-            traceback.print_exc()
-        #print('\r#{}'.format(loop_count), end='', flush=True)
-        time.sleep(minutes)
-        loop_count +=1
+            traceback.print_exc() 
+
+        for x in range(0, minutes): # Count minutes
+            for y in range(0, 10): # count to 10 every second, sleep 0.1 seconds and tick the spinner every 0.1 second
+                # this will ensure that the spinner is always running at 10x the speed, the sleep timer also works at 10x the 
+                spin.tick(text='waiting for {} minutes..'.format(int(countdown/60)))
+                time.sleep(0.1)
+            countdown -= 1
+        spin.end()
 else:
     collector = spot()
-    collect() #run 
+    collect()
+
 if os.name == 'nt':
     input('Press enter to close window.')

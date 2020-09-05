@@ -26,7 +26,6 @@ def checkforupdate():
             print('{} v{}\nNew version available: v{}\nGet it here: https://github.com/kragebein/Recentlier-Releaseder'.format(plname, version, newversion))
         else:
             print(plname + ' v' + version)
-            print('(recentlier is always running in the background)')
     try:
         f = requests.get('https://raw.githubusercontent.com/kragebein/Recentlier-Releaseder/master/version')
         upt = f.json()
@@ -91,6 +90,18 @@ class Spinner():
         15: 'D         Ɑ',
         16: '           '
             },
+        'dna': {
+            'tick': 9,
+        1: '|-----------------|',
+        2: ' \---------------/ ',
+        3: '  ~-_---------_-~  ',
+        4: '     ~-_---_-~     ',
+        5: '        ~-_        ',
+        6: '     _-~---~-_     ',
+        7: '  _-~---------~-_  ',
+        8: ' /---------------\ ',
+        9: '|-----------------|'
+            },
         'spinner': {
         'tick': 4,
         1: '|',
@@ -129,8 +140,8 @@ class Spinner():
         if self.ticks >= self.spinner[self.type]['tick']:
             self.ticks = 1
         print('\r{} {}'.format(
-            self.spinner[self.type][self.ticks] if self.pp is 'post' else self.text, 
-            self.text if self.pp is 'post' else self.spinner[self.type][self.ticks]), end='', flush=True
+            self.spinner[self.type][self.ticks] if self.pp is 0 else self.text, 
+            self.text if self.pp is 0 else self.spinner[self.type][self.ticks]), end='', flush=True
             )
         self.ticks += 1
 

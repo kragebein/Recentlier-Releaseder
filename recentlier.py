@@ -7,7 +7,7 @@ from spotipy.client import Spotify
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, checkforupdate, track_name, Spinner
-from spotipy import SpotifyException
+from spotipy.client import SpotifyException
 from datetime import datetime
 import traceback
 
@@ -22,7 +22,7 @@ def collect():
             dumpfile.write(tracklist)
             dumpfile.close()
     dump = _dump()
-    spin = Spinner('dna', 0, static=1)
+    spin = Spinner('dna', 0, static=0)
     found_item = False
     c = 0
     t = 0
@@ -57,9 +57,13 @@ def collect():
                                 del buffer[:]      
             
     spin.end()                    
-    if dump and found_item is False:
-        nuh = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        print('\r{}: Nothing new.'.format(nuh)) # \r 
+    if dump and found_item is False:     
+        print('\r{}: Nothing new.'.format(
+            datetime.now().strftime(
+                "%X %x" 
+                )
+            )
+        )
         return False
     elif not dump and not found_item:
         print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')
@@ -92,9 +96,10 @@ if int(conf.loop) != 0:
         try:
             collector = spot()
             collect()
-        except ConnectionError:
-            print('Max Retries exceeded. Trying again next loop.')
-            pass
+        except SpotifyException:
+            ''' token has expired, we think lets do this again '''
+            collector = spot()
+            collect()
         except Exception as r:
             traceback.print_exc() 
         # Spinners for everyone!

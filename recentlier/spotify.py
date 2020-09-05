@@ -3,8 +3,8 @@
 import json, re, requests, spotipy.util, os, sys, datetime, traceback, time, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, track_name
-
+from recentlier.div import _dump, track_name, Spinner
+spin = Spinner('dna', 0, static=1)
 
 class spot():
     ''' Spot class handles all API queries towards spotify. '''
@@ -34,6 +34,17 @@ class spot():
         self.x = sqlite3.connect('cache.db')
         self.sql = self.x.cursor()
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
+        self.login()
+
+       
+        mydata = self.sp.me()
+        self.myid = mydata['id']
+        # Enable or disable local cache through config.
+        if conf.cache.lower() == 'yes':
+            self.sp._get = self._get
+            self.sql.execute('CREATE TABLE IF NOT EXISTS cache (url TEXT, value BLOB);')
+            self.x.commit()
+    def login(self):
         try: 
             token = util.prompt_for_user_token(self.username, \
                 self.scope, client_id=self.cid, client_secret=self.cic, \
@@ -44,20 +55,10 @@ class spot():
         try:
             if token:
                 self.sp = spotipy.Spotify(auth=token)
+            return True
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
-
-
-       
-        mydata = self.sp.me()
-        self.myid = mydata['id']
-        # Enable or disable local cache through config.
-        if conf.cache.lower() == 'yes':
-            self.sp._get = self._get
-            self.sql.execute('CREATE TABLE IF NOT EXISTS cache (url TEXT, value BLOB);')
-            self.x.commit()
-
     # rewrite spotipy internals to support local caching.
     def _get(self, url, args=None, payload=None, **kwargs):   
         if args:
@@ -232,7 +233,7 @@ class spot():
         # Find and remove new instances of older tracks
         dupe_count = 0
         for i in track.copy():
-            print('\r{} duplicates removed..'.format(dupe_count), end='', flush=True)
+            #print('\r{} duplicates removed..'.format(dupe_count), end='', flush=True)
             dupes = {}
             try: 
                 artist_id = track[i][4]
@@ -271,7 +272,7 @@ class spot():
             size = int(self.plsize)
             for i in self.sorted[0:size]:
                 self.playlist_new.append(i[0])
-            print('done.')
+            #print('done.')
             return self.playlist_new
         except Exception:
             traceback.print_exc()
@@ -290,12 +291,14 @@ class spot():
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
         length = len(playlist_tracks['items'])
-
+        
+        
         # if empty, add everything to playlist
         if length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
-                print('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # Add, remove, compare and adjust. 
@@ -317,7 +320,8 @@ class spot():
             print('Flushing playlist.')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in playlist:
-                print('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # We dont need to do anything, how have the user even reached this code?
@@ -330,10 +334,12 @@ class spot():
             print('There are {} new tracks'.format(len(comparison)))
             start_pos = int(self.plsize) - len(comparison)
             for i in set(playlist).difference(current_id):
-                print('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                #print('[+] {}'.format(track_name(self.tracklist, i)))
             print('')
             for i in comparison:
-                print('[-] {}'.format(track_name(self.tracklist, i)))
+                spin.tick('[-] {}'.format(track_name(self.tracklist, i)))
+                #print('[-] {}'.format(track_name(self.tracklist, i)))
             self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
             for i in in_tracks: # Adjust the position of the newly added tracks
@@ -350,7 +356,7 @@ class spot():
         ''' dump sorted tracks into playlist'''
         try:
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
-            print('Updated playlist with {} tracks'.format(self.plsize))
+            spin.tick('Updated playlist with {} tracks'.format(self.plsize))
         except Exception:
             traceback.print_exc()
 

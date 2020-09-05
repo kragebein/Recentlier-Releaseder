@@ -3,7 +3,7 @@
 # pylint: disable=no-name-in-module
 import json, re, requests, spotipy.util, os, sys, time
 import spotipy.util as util
-from spotipy.client import Spotify # new
+from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, checkforupdate, track_name, Spinner
@@ -22,8 +22,7 @@ def collect():
             dumpfile.write(tracklist)
             dumpfile.close()
     dump = _dump()
-    spin = Spinner('notes', 'pre')
-    
+    spin = Spinner('dna', 0, static=1)
     found_item = False
     c = 0
     t = 0
@@ -34,7 +33,7 @@ def collect():
     for artist in collector.get_artists():
         a +=1
         for album in collector.get_albums(artist['id']):
-            spin.tick(text='searching..') # loading bar text, leave empty for none
+            spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
             if dump:
                 if album['id'] in dump['albums']:
                     break
@@ -85,26 +84,24 @@ def collect():
     else:
         print('We met an unkonwn condition, exiting')
         return False
-# loop
-
+# loopity whoop
 if int(conf.loop) != 0:
     minutes = int(conf.loop) * 60
     countdown = minutes
-    spin = Spinner('quarter', 'post')
+    spin = Spinner('dna', 0)
     while True:
         try:
             collector = spot()
             collect()
-                
         except ConnectionError:
             print('Max Retries exceeded. Trying again next loop.')
             pass
         except Exception as r:
             traceback.print_exc() 
-
-        for x in range(0, minutes): # Count minutes
-            for y in range(0, 10): # count to 10 every second, sleep 0.1 seconds and tick the spinner every 0.1 second
-                # this will ensure that the spinner is always running at 10x the speed, the sleep timer also works at 10x the 
+        # Spinners for everyone!
+        for x in range(0, minutes): 
+            for y in range(0, 10): 
+                # Smoother spinner.
                 spin.tick(text='waiting for {} minutes..'.format(int(countdown/60)))
                 time.sleep(0.1)
             countdown -= 1

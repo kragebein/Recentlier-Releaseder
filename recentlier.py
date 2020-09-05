@@ -58,8 +58,7 @@ def collect():
             
     spin.end()                    
     if dump and found_item is False:
-        now = datetime.now()
-        nuh = now.strftime("%d/%m/%Y %H:%M:%S")
+        nuh = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         print('\r{}: Nothing new.'.format(nuh)) # \r 
         return False
     elif not dump and not found_item:
@@ -87,9 +86,9 @@ def collect():
 # loopity whoop
 if int(conf.loop) != 0:
     minutes = int(conf.loop) * 60
-    countdown = minutes
     spin = Spinner('dna', 0)
     while True:
+        countdown = minutes
         try:
             collector = spot()
             collect()
@@ -100,9 +99,11 @@ if int(conf.loop) != 0:
             traceback.print_exc() 
         # Spinners for everyone!
         for x in range(0, minutes): 
+            if countdown == 0:
+                break
             for y in range(0, 10): 
                 # Smoother spinner.
-                spin.tick(text='waiting for {} minutes..'.format(int(countdown/60)))
+                spin.tick(text='waiting for {}'.format(str(int(countdown/60)) + ' minutes..' if int(countdown/60) >= 1 else str(int(countdown)) + ' seconds..'))
                 time.sleep(0.1)
             countdown -= 1
         spin.end()

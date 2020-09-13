@@ -65,13 +65,9 @@ class spot():
             kwargs.update(args)
         _db = self.db(url, 'get')
         if _db:
-            # This will look up every single transaction towards Spotify in the local cahche.
-            # If the cache for this particular url exists, we will return the data from the cahce instead. 
-
             return json.loads(_db)
-        # if we dont have that data cached, we will intercept the data and add it to cache before returning it.
         returndata = self.sp._internal_call("GET", url, payload, kwargs)
-        self.db(url, 'put', value=returndata) # write new data to cache.
+        self.db(url, 'put', value=returndata) 
         return returndata
 
     def db(self, url, method, value=None):
@@ -81,10 +77,11 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-#            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url) )
+#            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url))
             return data[0] if data is not None else False
         elif method == 'put':
-            if 'https://api.spotify.com/v1/me/following' not in url or 'playlists' not in url:
+            _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/','https://api.spotify.com/v1/artists/', 'https://api.spotify.com/v1/me/following')
+            if not url.startswith(_list):
 #                print('SQL: putting {}'.format(url))
                 query = 'INSERT INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
@@ -297,7 +294,7 @@ class spot():
         if length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
-                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
                 #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
@@ -312,33 +309,32 @@ class spot():
 
         # sorted data is identical to online playlist
         if current_id == playlist:
-            print('Online playlist and local sorted list are the same.')
+            spin.tick(text='Online playlist and local sorted list are the same.')
             return True
 
         # If we need to update everything, might as well just swap out everything.
         if len(comparison) > int(self.plsize): # self.plsize
-            print('Flushing playlist.')
+            spin.tick(text='Flushing playlist.')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in playlist:
-                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
                 #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # We dont need to do anything, how have the user even reached this code?
         if len(comparison) == self.plsize:
-            print('Playlist doesnt need updating, local list and playlist are the same size.')
+            spin.tick(text='Playlist doesnt need updating, local list and playlist are the same size.')
             return True
         
         # Gracefully update the playlist. 
         if len(comparison) > 1:
-            print('There are {} new tracks'.format(len(comparison)))
+            spin.tick(text='There are {} new tracks'.format(len(comparison)))
             start_pos = int(self.plsize) - len(comparison)
             for i in set(playlist).difference(current_id):
-                spin.tick('[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
                 #print('[+] {}'.format(track_name(self.tracklist, i)))
-            print('')
             for i in comparison:
-                spin.tick('[-] {}'.format(track_name(self.tracklist, i)))
+                spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
                 #print('[-] {}'.format(track_name(self.tracklist, i)))
             self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)

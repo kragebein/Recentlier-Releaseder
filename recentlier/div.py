@@ -1,8 +1,40 @@
 #!/usr/bin/python3
 ''' Some other classes '''
-import os, re, json, requests
+import os, re, json, requests, sqlite3, sys
 
 from recentlier.config import conf
+
+def _del(what):
+    ''' delete stuff from database'''
+    x = sqlite3.connect('cache.db')
+    cur = x.cursor()
+    if what == 'json':
+        cur.execute('DELETE FROM cache WHERE url = "jsondump";')
+    if what == 'cache':
+        cur.execute('DELETE FROM cache WHERE url NOT LIKE "jsondump";')
+    x.commit()
+
+def arguments(args):
+    if "-D" in args and "json" in args:
+        print('This will delete our own sorted list from the database. Forcing recentlier to rebuild its own list.')
+        if input('[y] to continue, any other key to abort: ').lower() == "y":
+            _del('json')
+            print('Dump removed.')
+            sys.exit(0)
+    elif '-D' in args and "cache" in args:
+        print('This will delete the entire cache, forcing recentlier to rebuild the cache on next run.')
+        if input('[y] to continue, any other key to abort: ').lower() == "y":
+            _del('cache')
+            print('cache removed')
+            sys.exit(0)
+    elif '-h' in args or '--help' in args:
+        print('{} -- run program'.format(args[0]))
+        print('{} -D json -- delete recentliers internally sorted list.'.format(args[0]))
+        print('{} -D cache -- delete recentliers internal cache.'.format(args[0]))
+        sys.exit(0)
+    else:
+        print('Try \n{} --help'.format(args[0]))
+        sys.exit(0)
 
 def _dump():
     '''tries to load already parsed data'''
@@ -12,6 +44,17 @@ def _dump():
             return dump
     else:
         return False
+def sql_dump():
+    '''tries to load already parsed data'''
+    if os.path.exists('cache.db'):
+        with sqlite3.connect('cache.db') as x:
+            cur = x.cursor()
+            data = cur.execute('SELECT value FROM cache WHERE url = "jsondump";').fetchone()
+            if data != None:
+                return json.loads(data[0])
+            else:
+                return False
+            
 
 def checkforupdate():
     config = conf()

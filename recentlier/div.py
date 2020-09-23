@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 ''' Some other classes '''
-import os, re, json, requests, sqlite3, sys
+import os, re, json, requests, sqlite3, sys, traceback
 
 from recentlier.config import conf
 
@@ -67,6 +67,7 @@ def checkforupdate():
         newversion = update['version']
         if newversion > version:
             print('{} v{}\nNew version available: v{}\nGet it here: https://github.com/kragebein/Recentlier-Releaseder'.format(plname, version, newversion))
+ 
         else:
             print(plname + ' v' + version)
     try:
@@ -76,8 +77,8 @@ def checkforupdate():
         pass
     try:
         update(upt)
-    except:
-        print(plname + ' v' + version)
+    except Exception as R:
+        pass
 
 def track_name(list, i):
     ''' Print the the track data from the list'''

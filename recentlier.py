@@ -1,27 +1,30 @@
 #!/usr/bin/python3
 ''' Recently Releaseder '''
 # pylint: disable=no-name-in-module
-import json, re, requests, spotipy.util, os, sys, time
+import json, re, requests, spotipy.util, os, sys, time, sqlite3
 import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, checkforupdate, track_name, Spinner
+from recentlier.div import sql_dump, checkforupdate, track_name, Spinner, arguments
 from spotipy.client import SpotifyException
 from datetime import datetime
 import traceback
+
+if len(sys.argv) > 1:
+    arguments(sys.argv)
 
 conf = _conf()
 checkforupdate()
 def collect():
     def writedump():
         ''' write the dumpfile '''
-        with open('dump.json', 'w') as dumpfile:
-            # We Lets sort and set up indent for this
-            tracklist = json.dumps(collector.tracklist, indent=2, sort_keys=True)
-            dumpfile.write(tracklist)
-            dumpfile.close()
-    dump = _dump()
+        x = sqlite3.connect('cache.db')
+        conn = x.cursor()
+        query = 'REPLACE INTO cache VALUES(?, ?)'
+        conn.execute(query, ['jsondump', json.dumps(collector.tracklist, sort_keys=True)])
+        x.commit()
+    dump = sql_dump()
     spin = Spinner('dna', 0, static=0)
     found_item = False
     c = 0
@@ -30,18 +33,23 @@ def collect():
     track_data = {}
     albums = []
     buffer = []  
+    # get artists from followlist
     for artist in collector.get_artists():
         a +=1
+        # get albums from artist
         for album in collector.get_albums(artist['id']):
             spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
+            # if album has been processed earlier, skip this album.
             if dump:
                 if album['id'] in dump['albums']:
                     break
             albums.append(album['id'])
             album_name = album['name']
+            #get tracks from album
             for track in collector.get_tracks(album['id']):
                 buffer.append(track['id'])
-                if len(buffer) == 50 or a <= len(collector.follow): #build buffer or wait until last iteration
+                if len(buffer) == 50 or len(buffer) >= collector.get_album_tracks_total:
+                    # get track details about each track (build buffer) ^
                     for details in collector.get_track_details(buffer):
                         release_date = details['album']['release_date']
                         track_name = details['name']
@@ -50,6 +58,7 @@ def collect():
                             artist_name = artist['name']
                             artist_id = artist['id']
                             c +=1
+                            # if main artist is in the list of artists you follow, add to list of tracks to be concidered.
                             if artist_id in collector.follow:
                                 found_item = True
                                 t +=0
@@ -58,7 +67,7 @@ def collect():
             
     spin.end()                    
     if dump and found_item is False:     
-        print('\r{}: Nothing new.'.format(
+        spin.tick(text='{}: Nothing new.'.format(
             datetime.now().strftime(
                 "%X %x" 
                 )

@@ -1,11 +1,1 @@
-{
-    "1.4.4": 
-    [
-        "New - When application detects updates, it will output this information",
-        "New - added arguments", 
-        "New - Moved dump.json into database", 
-        "Bugfix - Dynamic content no longer saved in cache.", 
-        "Bugfix - Buffer now works as intended",
-        "Next - Create debug mode to debug better"
-    ]
-}
+{"1.4.4": ["New - When application detects updates, it will output this information", "New - added arguments","New - Moved dump.json into database","Bugfix - Dynamic content no longer saved in cache.", "Bugfix - Buffer now works as intended","Next - Create debug mode to debug better"]}

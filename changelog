@@ -1,4 +1,4 @@
-{ 
+{
     "1.4.4": 
     [
         "New: When application detects updates, it will output this information",

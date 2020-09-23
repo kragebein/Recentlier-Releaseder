@@ -10,40 +10,41 @@ class spot():
     ''' Spot class handles all API queries towards spotify. '''
     def __init__(self):
         conf = _conf()
-        self.tracklist = {}
-        self.popped = []
-        self.plname = conf.playlist_name
-        self.plsize = conf.playlist_size
-        self.follow = []
-        self.albums = {}
-        self.get_artists_total = ''
-        self.get_artist_album_total = ''
-        self.get_artist_single_total = ''
-        self.get_artist_tracks_total = ''
-        self.track_details_total = ''
-        self.artist_albums = {}
-        self.artist_singles = {}
-        self.artist_collection = {}
-        self.artist_appears_on = {}
-        self.data = []
-        self.sp = ''
-        self.username = self.getusername()
-        self.cid = conf.cid 
-        self.cic = conf.cic
-        self.callback = conf.callback
+        self.debug = False                  # Set to true if --debug (TODO)
+        self.tracklist = {}                 # Unsorted tracklist
+        self.popped = []                    # Duplicate tracks
+        self.plname = conf.playlist_name    # Playlist name
+        self.plsize = conf.playlist_size    # Playlist siuze
+        self.follow = []                    # Follow list
+        self.albums = {}                    # Albums list from all follow artists
+        self.get_artists_total = ''         # how many artists in total
+        self.get_artist_album_total = ''    # How many albums does this artist have
+        self.get_artist_single_total = ''   # how many singles does this artist have
+        self.get_artist_tracks_total = ''   # How many tracks does this artist have in totalt
+        self.track_details_total = ''       # How many tracks will we request for detailed analysis
+        self.get_album_tracks_total = 0     # Total tracks counter (temp var)
+        self.artist_albums = {}             # Artist albums for generator
+        self.artist_singles = {}            # artist singles for generator
+        self.artist_collection = {}         # artist collections for generator
+        self.artist_appears_on = {}         # artist appears_on for generator          
+        self.sp = ''                        # Spotify session 
+        self.username = self.getusername()  # username
+        self.cid = conf.cid                 # Client Key
+        self.cic = conf.cic                 # Client Secret
+        self.callback = conf.callback       # Callback URL.
+
         self.x = sqlite3.connect('cache.db')
         self.sql = self.x.cursor()
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.login()
-
-       
-        mydata = self.sp.me()
-        self.myid = mydata['id']
+        mydata = self.sp.me()               # User profile
+        self.myid = mydata['id']            # User ID
         # Enable or disable local cache through config.
         if conf.cache.lower() == 'yes':
             self.sp._get = self._get
             self.sql.execute('CREATE TABLE IF NOT EXISTS cache (url TEXT, value BLOB);')
             self.x.commit()
+
     def login(self):
         try: 
             token = util.prompt_for_user_token(self.username, \
@@ -59,6 +60,7 @@ class spot():
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
+
     # rewrite spotipy internals to support local caching.
     def _get(self, url, args=None, payload=None, **kwargs):   
         if args:
@@ -77,19 +79,19 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-#            print('SQL: fetching {} (Cache)'.format(url) if data is not None else 'SQL: fetching {} (API)'.format(url))
+#            print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
             return data[0] if data is not None else False
         elif method == 'put':
-            _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/','https://api.spotify.com/v1/artists/', 'https://api.spotify.com/v1/me/following')
-            if not url.startswith(_list):
-#                print('SQL: putting {}'.format(url))
-                query = 'INSERT INTO cache VALUES(?, ?)'
+            _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
+            if url.startswith(_list):
+                #print('SQL: putting {}'.format(url))
+                query = 'REPLACE INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
 
     def getusername(self):
         '''Will fill the username variable'''
-        
+
         try:
             with open('.user','r') as ussr:
                 usssr = json.loads(ussr.read())
@@ -170,6 +172,7 @@ class spot():
 
     def get_tracks(self, album):
         ''' album tracks generator '''
+        self.get_album_tracks_total = 0
         album_tracks = {}
         result = self.sp.album_tracks(album, limit=50)
         album_tracks.update(result)
@@ -179,6 +182,7 @@ class spot():
                 album_tracks['items'].append(i)
             if result['next'] is None:
                 break
+        self.get_album_tracks_total = len(album_tracks['items'])
         for i in album_tracks['items']:
             yield i
 

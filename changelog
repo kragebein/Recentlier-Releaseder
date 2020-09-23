@@ -6,6 +6,6 @@
         "New: Moved dump.json into database", 
         "Bugfix: Dynamic content no longer saved in cache.", 
         "Bugfix: Buffer now works as intended",
-        "Next: Create debug mode to debug better
+        "Next: Create debug mode to debug better"
     ]
 }

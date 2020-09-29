@@ -288,7 +288,14 @@ class spot():
         Actuallay fill up the playlist. If playlist has data, 
         '''
         # Collect the datasets
-        playlist = self.sort()
+        try:
+            playlist = self.sort()
+        except:
+            with open('DEBUGDUMP.TXT', 'w') as brrt:
+                brrt.write(json.dumps(locals(), indent=2))
+                brrt.close()
+            print('DEBUGDUMP.TXT created! Please upload!')
+            pass
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
         length = len(playlist_tracks['items'])

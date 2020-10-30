@@ -6,7 +6,7 @@ import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
-from recentlier.div import sql_dump, checkforupdate, track_name, Spinner, arguments
+from recentlier.div import _dump, checkforupdate, track_name, Spinner, arguments
 from spotipy.client import SpotifyException
 from datetime import datetime
 import traceback
@@ -19,12 +19,15 @@ checkforupdate()
 def collect():
     def writedump():
         ''' write the dumpfile '''
-        x = sqlite3.connect('cache.db')
-        conn = x.cursor()
-        query = 'REPLACE INTO cache VALUES(?, ?)'
-        conn.execute(query, ['jsondump', json.dumps(collector.tracklist, sort_keys=True)])
-        x.commit()
-    dump = sql_dump()
+        #x = sqlite3.connect('cache.db')
+        #conn = x.cursor()
+        #query = 'REPLACE INTO cache VALUES(?, ?)'
+        with open('dump.json', 'w') as brrt:
+            brrt.write(json.dumps(collector.tracklist, sort_keys=True))
+        brrt.close()
+        #conn.execute(query, ['jsondump', json.dumps(collector.tracklist, sort_keys=True)])
+        #x.commit()
+    dump = _dump()
     spin = Spinner('dna', 0, static=0)
     found_item = False
     c = 0

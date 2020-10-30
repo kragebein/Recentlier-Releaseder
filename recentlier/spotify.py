@@ -60,14 +60,14 @@ class spot():
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
-
-    # rewrite spotipy internals to support local caching.
+    # rewrite spotipy internals to allow caching.
     def _get(self, url, args=None, payload=None, **kwargs):   
         if args:
             kwargs.update(args)
         _db = self.db(url, 'get')
         if _db:
             return json.loads(_db)
+        
         returndata = self.sp._internal_call("GET", url, payload, kwargs)
         self.db(url, 'put', value=returndata) 
         return returndata
@@ -79,19 +79,18 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-#            print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
+            print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
             return data[0] if data is not None else False
         elif method == 'put':
             _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
             if url.startswith(_list):
-                #print('SQL: putting {}'.format(url))
+                print('SQL: putting {}'.format(url))
                 query = 'REPLACE INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
 
     def getusername(self):
         '''Will fill the username variable'''
-
         try:
             with open('.user','r') as ussr:
                 usssr = json.loads(ussr.read())
@@ -298,6 +297,8 @@ class spot():
             pass
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
+        # TODO: Walk through pagination.
+  
         length = len(playlist_tracks['items'])
         
         

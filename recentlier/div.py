@@ -31,7 +31,23 @@ def arguments(args):
         print('{} -- run program'.format(args[0]))
         print('{} -D json -- delete recentliers internally sorted list.'.format(args[0]))
         print('{} -D cache -- delete recentliers internal cache.'.format(args[0]))
+        print('{} -D playlist -- delete the playlist from Spotify.'.format(args[0]))
         sys.exit(0)
+    elif '-D' in args and 'playlist' in args:
+        ''' Fetches spotify playlist id and deletes it.  '''
+        print('This will delete the online playlist from Spotify.')
+        if input('[y] to continue, any other key to abort: ').lower() == "y":
+            from recentlier.spotify import spot
+            api = spot()  
+            playlist_id = api.genplaylist()
+            try: 
+                api.sp.user_playlist_unfollow(api.myid, playlist_id)
+                print('Done, playlist with id {} was deleted.'.format(playlist_id))
+            except:
+                print('Unable to delete playlist, see stacktrace below.')
+                traceback.print_exc()
+        sys.exit(0)
+    
     else:
         print('Try \n{} --help'.format(args[0]))
         sys.exit(0)
@@ -77,7 +93,7 @@ def checkforupdate():
         pass
     try:
         update(upt)
-    except Exception as R:
+    except:
         pass
 
 def track_name(list, i):

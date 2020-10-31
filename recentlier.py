@@ -41,7 +41,7 @@ def collect():
         a +=1
         # get albums from artist
         for album in collector.get_albums(artist['id']):
-            spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
+            #spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
             # if album has been processed earlier, skip this album.
             if dump:
                 if album['id'] in dump['albums']:
@@ -68,14 +68,9 @@ def collect():
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
                                 del buffer[:]      
             
-    spin.end()                    
+    #spin.end()                    
     if dump and found_item is False:     
-        spin.tick(text='{}: Nothing new.'.format(
-            datetime.now().strftime(
-                "%X %x" 
-                )
-            )
-        )
+        #spin.tick(text='{}: Nothing new.'.format(datetime.now().strftime("%X %x")))
         return False
     elif not dump and not found_item:
         print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')

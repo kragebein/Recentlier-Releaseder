@@ -14,7 +14,7 @@ class spot():
         self.tracklist = {}                 # Unsorted tracklist
         self.popped = []                    # Duplicate tracks
         self.plname = conf.playlist_name    # Playlist name
-        self.plsize = conf.playlist_size    # Playlist siuze
+        self.plsize = int(conf.playlist_size)# Playlist size
         self.follow = []                    # Follow list
         self.albums = {}                    # Albums list from all follow artists
         self.get_artists_total = ''         # how many artists in total
@@ -32,6 +32,7 @@ class spot():
         self.cid = conf.cid                 # Client Key
         self.cic = conf.cic                 # Client Secret
         self.callback = conf.callback       # Callback URL.
+        self.dbb = None
 
         self.x = sqlite3.connect('cache.db')
         self.sql = self.x.cursor()
@@ -67,11 +68,10 @@ class spot():
         _db = self.db(url, 'get')
         if _db:
             return json.loads(_db)
-        
-        returndata = self.sp._internal_call("GET", url, payload, kwargs)
-        self.db(url, 'put', value=returndata) 
-        return returndata
-
+        else:
+            returndata = self.sp._internal_call("GET", url, payload, kwargs)
+            self.db(url, 'put', value=returndata) 
+            return returndata
     def db(self, url, method, value=None):
         prefix = "https://api.spotify.com/v1/"
         if not url.startswith('http'):
@@ -221,19 +221,44 @@ class spot():
         return playlist_id
         
     def sort(self):
-        ''' sort all the data we have retrieved from spotify '''
+        ''' 31.10.20: Sort function rewrite'''
+        allTracks = {}
         self.unsorted = {}
-        
-        # needed for debugging
-        #dump = _dump()
-        #if dump:
-            #self.tracklist.update({'tracks': dump['tracks']})
-
         track = self.tracklist['tracks']
-        # Find and remove new instances of older tracks
+        #Fill the allTracks Dict with all potential duplicates
+        for i in track.copy():
+            try: # need to a
+                trackId = i
+                artistName = track[i][2].strip()
+                trackName = track[i][3].strip()
+                releaseDate = track[i][5] 
+            except Exception as R:
+                traceback.print_exc()
+                break #Print stack, break iteration, continue loop.
+            if len(releaseDate) == 4:
+                releaseDate = releaseDate + '-01-01'
+            if len(releaseDate) != 10: break
+            thisTrack = '{} - {}'.format(artistName, trackName)
+            if thisTrack in allTracks:
+                allTracks[thisTrack].update({trackId: releaseDate})
+            else:
+                allTracks[thisTrack] = {trackId: releaseDate}
+        for x in allTracks: 
+            tId, tDate = sorted(allTracks[x].items(), \
+                 key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=False)[0]
+            self.unsorted.update({tId: tDate}) # adds oldest of all occurences to unsorted list
+        # sort the entire tracklist
+        self.sorted = sorted(self.unsorted.items(), \
+            key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=True)
+       
+        return [i[0] for i in self.sorted[0:self.plsize]] # Playlist 
+
+    def _sort(self):
+        ''' old sort function, for posterity '''
+        self.unsorted = {}
+        track = self.tracklist['tracks']
         dupe_count = 0
         for i in track.copy():
-            #print('\r{} duplicates removed..'.format(dupe_count), end='', flush=True)
             dupes = {}
             try: 
                 artist_id = track[i][4]
@@ -241,7 +266,7 @@ class spot():
                 release_date = track[i][5]
             except:
                 break
-            for dupe in track.copy():                       # == for exact match - use 'is' for aproximate match                     
+            for dupe in track.copy():                             
                 if artist_id in track[dupe][4] and track_name == track[dupe][3] and release_date != track[dupe][5] and len(track[dupe][5]) != 4:
                     dupes.update({dupe: track[dupe][5]})
                     dupe_count +=1
@@ -287,6 +312,7 @@ class spot():
         Actuallay fill up the playlist. If playlist has data, 
         '''
         # Collect the datasets
+        playlist = ''
         try:
             playlist = self.sort()
         except:

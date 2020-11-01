@@ -96,9 +96,10 @@ def checkforupdate():
     except:
         pass
 
+blah = r'\d{4}\-\d{1,2}\/\d{1,2}$'
+
 def track_name(list, i):
     ''' Print the the track data from the list'''
-    #track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
     try:
         artist = list['tracks'][i][2]
         track = list['tracks'][i][3]
@@ -108,7 +109,18 @@ def track_name(list, i):
         track = 'unknown track'
         rel_date = '????-??-??'
         pass
-    return('({}) {} - {}'.format(rel_date, artist, track).encode('utf-8'))
+    return('({}) {} - {}'.format(rel_date, artist, track))
+
+def iso_name(list, i):
+    ''' get iso name '''
+    try:
+        artist = list['tracks'][i][2].strip()
+        track = list['tracks'][i][3].strip()
+    except Exception:
+        artist = 'Unkown artist'
+        track = 'unknown track'
+        pass
+    return('{} - {}'.format(artist, track))
 
 
 class Spinner():

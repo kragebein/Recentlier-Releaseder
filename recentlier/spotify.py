@@ -3,7 +3,7 @@
 import json, re, requests, spotipy.util, os, sys, datetime, traceback, time, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, track_name, Spinner
+from recentlier.div import _dump, track_name, iso_name, Spinner
 spin = Spinner('dna', 0, static=1)
 
 class spot():
@@ -12,7 +12,7 @@ class spot():
         conf = _conf()
         self.debug = False                  # Set to true if --debug (TODO)
         self.tracklist = {}                 # Unsorted tracklist
-        self.popped = []                    # Duplicate tracks
+        self.popped = {}                    # Duplicat track amount
         self.plname = conf.playlist_name    # Playlist name
         self.plsize = int(conf.playlist_size)# Playlist size
         self.follow = []                    # Follow list
@@ -32,7 +32,6 @@ class spot():
         self.cid = conf.cid                 # Client Key
         self.cic = conf.cic                 # Client Secret
         self.callback = conf.callback       # Callback URL.
-        self.dbb = None
 
         self.x = sqlite3.connect('cache.db')
         self.sql = self.x.cursor()
@@ -225,83 +224,34 @@ class spot():
         allTracks = {}
         self.unsorted = {}
         track = self.tracklist['tracks']
+        
         #Fill the allTracks Dict with all potential duplicates
         for i in track.copy():
-            try: # need to a
+            try:
                 trackId = i
                 artistName = track[i][2].strip()
                 trackName = track[i][3].strip()
                 releaseDate = track[i][5] 
             except Exception as R:
                 traceback.print_exc()
-                break #Print stack, break iteration, continue loop.
-            if len(releaseDate) == 4:
-                releaseDate = releaseDate + '-01-01'
-            if len(releaseDate) != 10: break
+                break # print stack and continue with next iteration
+            if len(releaseDate) == 4: releaseDate = releaseDate + '-01-01'
+            if len(releaseDate) != 10: break 
             thisTrack = '{} - {}'.format(artistName, trackName)
             if thisTrack in allTracks:
                 allTracks[thisTrack].update({trackId: releaseDate})
             else:
                 allTracks[thisTrack] = {trackId: releaseDate}
-        for x in allTracks: 
+        for x in allTracks: # adds oldest of all occurences to unsorted list
             tId, tDate = sorted(allTracks[x].items(), \
                  key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=False)[0]
-            self.unsorted.update({tId: tDate}) # adds oldest of all occurences to unsorted list
-        # sort the entire tracklist
+            self.unsorted.update({tId: tDate}) # add the track data to unsorted list
+            self.popped[x] = '{}'.format(str(len(allTracks[x]) -1)) # number of duped tracks
+        
+        # sort the entire unsorted tracklist
         self.sorted = sorted(self.unsorted.items(), \
             key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=True)
-       
-        return [i[0] for i in self.sorted[0:self.plsize]] # Playlist 
-
-    def _sort(self):
-        ''' old sort function, for posterity '''
-        self.unsorted = {}
-        track = self.tracklist['tracks']
-        dupe_count = 0
-        for i in track.copy():
-            dupes = {}
-            try: 
-                artist_id = track[i][4]
-                track_name = track[i][3]
-                release_date = track[i][5]
-            except:
-                break
-            for dupe in track.copy():                             
-                if artist_id in track[dupe][4] and track_name == track[dupe][3] and release_date != track[dupe][5] and len(track[dupe][5]) != 4:
-                    dupes.update({dupe: track[dupe][5]})
-                    dupe_count +=1
-            if len(dupes) > 2:
-                one = {}
-                for i in dupes:
-                    if len(dupes[i]) > 5:
-                        one.update({i: dupes[i]})
-                one_sorted = sorted(one.items(), key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=False)
-                length = len(one_sorted)
-                for i in one_sorted[1:length]:
-                    self.tracklist['tracks'].pop(i[0])
-                    self.popped.append(i[0])
-                    dupe_count +=1
-                    
-        # populate the unsorted list with a tuple
-        pop = []
-        for data in track:
-            self.unsorted.update({data: track[data][5]})
-        for i in self.unsorted:
-            if len(self.unsorted[i]) <= 5: 
-                pop.append(i)
-        for i in pop:
-            self.unsorted.pop(i)
-        self.sorted = sorted(self.unsorted.items(), key=lambda x: datetime.datetime.strptime(x[1],'%Y-%m-%d'), reverse=True)
-        try:
-            self.playlist_new = []
-            size = int(self.plsize)
-            for i in self.sorted[0:size]:
-                self.playlist_new.append(i[0])
-            #print('done.')
-            return self.playlist_new
-        except Exception:
-            traceback.print_exc()
-            # - stop exceution if this important part fails
+        return [i[0] for i in self.sorted[0:self.plsize]] # return the playlist
 
     def diff(self, first, second):
         ''' Compare list types '''
@@ -309,31 +259,18 @@ class spot():
 
     def updateplaylist(self):
         ''' 
-        Actuallay fill up the playlist. If playlist has data, 
+        Actuallay fill up the playlist.  
         '''
         # Collect the datasets
-        playlist = ''
-        try:
-            playlist = self.sort()
-        except:
-            with open('DEBUGDUMP.TXT', 'w') as brrt:
-                brrt.write(json.dumps(locals(), indent=2))
-                brrt.close()
-            print('DEBUGDUMP.TXT created! Please upload!')
-            pass
+        playlist = self.sort()
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
-        # TODO: Walk through pagination.
-  
         length = len(playlist_tracks['items'])
-        
-        
         # if empty, add everything to playlist
         if length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-                #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # Add, remove, compare and adjust. 
@@ -356,7 +293,6 @@ class spot():
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in playlist:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-                #print('[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
         # We dont need to do anything, how have the user even reached this code?
@@ -370,10 +306,8 @@ class spot():
             start_pos = int(self.plsize) - len(comparison)
             for i in set(playlist).difference(current_id):
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-                #print('[+] {}'.format(track_name(self.tracklist, i)))
             for i in comparison:
                 spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
-                #print('[-] {}'.format(track_name(self.tracklist, i)))
             self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
             for i in in_tracks: # Adjust the position of the newly added tracks
@@ -395,5 +329,5 @@ class spot():
             traceback.print_exc()
 
     def get_single_track_details(self, i):
-        '''Just print the data from this single track'''
+        '''returns details of a single track'''
         return json.dumps(self.sp.track(i), indent=2)

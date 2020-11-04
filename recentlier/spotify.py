@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 ''' Spotify API file '''
-import json, re, requests, spotipy.util, os, sys, datetime, traceback, time, sqlite3
+import json, spotipy.util,sys, datetime, traceback, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, track_name, iso_name, Spinner
+from recentlier.div import track_name, Spinner
 spin = Spinner('dna', 0, static=1)
 
 class spot():
@@ -60,6 +60,7 @@ class spot():
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
+            
     # rewrite spotipy internals to allow caching.
     def _get(self, url, args=None, payload=None, **kwargs):   
         if args:
@@ -71,6 +72,7 @@ class spot():
             returndata = self.sp._internal_call("GET", url, payload, kwargs)
             self.db(url, 'put', value=returndata) 
             return returndata
+
     def db(self, url, method, value=None):
         prefix = "https://api.spotify.com/v1/"
         if not url.startswith('http'):
@@ -235,7 +237,10 @@ class spot():
             except Exception as R:
                 traceback.print_exc()
                 break # print stack and continue with next iteration
-            if len(releaseDate) == 4: releaseDate = releaseDate + '-01-01'
+            if len(releaseDate) == 4: 
+                if int(releaseDate) <= 2011:
+                    releaseDate = str('2011')
+                releaseDate = releaseDate + '-01-01'
             if len(releaseDate) != 10: break 
             thisTrack = '{} - {}'.format(artistName, trackName)
             if thisTrack in allTracks:

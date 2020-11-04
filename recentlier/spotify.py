@@ -80,12 +80,12 @@ class spot():
         if method == 'get':
             query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
             data = self.sql.execute(query).fetchone()
-            print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
+            #print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
             return data[0] if data is not None else False
         elif method == 'put':
             _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
             if url.startswith(_list):
-                print('SQL: putting {}'.format(url))
+                #print('SQL: putting {}'.format(url))
                 query = 'REPLACE INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
@@ -302,7 +302,7 @@ class spot():
 
         # We dont need to do anything, how have the user even reached this code?
         if len(comparison) == self.plsize:
-            spin.tick(text='Playlist doesnt need updating, local list and playlist are the same size.')
+            spin.tick(text='Playlist doesnt need updating, local list and playlist are the same size. ')
             return True
         
         # Gracefully update the playlist. 

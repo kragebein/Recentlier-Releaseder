@@ -6,13 +6,14 @@ from recentlier.config import conf
 
 def _del(what):
     ''' delete stuff from database'''
-    x = sqlite3.connect('cache.db')
-    cur = x.cursor()
     if what == 'json':
-        cur.execute('DELETE FROM cache WHERE url = "jsondump";')
+        os.remove('dump.json')
+        
     if what == 'cache':
+        x = sqlite3.connect('cache.db')
+        cur = x.cursor()
         cur.execute('DELETE FROM cache WHERE url NOT LIKE "jsondump";')
-    x.commit()
+        x.commit()
 
 def arguments(args):
     if "-D" in args and "json" in args:
@@ -136,8 +137,8 @@ class Spinner():
         self.ticks = 1
         self.text = ''
         self.prevtext = ''
-        self.spinner = { 'notes':
-            {
+        self.spinner = { 
+        'notes': {
         'tick': 8,
         2: '♫        ♪',
         1: ' ♫      ♪ ',

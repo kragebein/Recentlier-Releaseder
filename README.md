@@ -6,6 +6,17 @@ Unlike spotify's "Recently Released"-list that is dynamically updated based on s
 
 **Latest updates**
 
+1.5:
+* Rewrote the entire sorting function
+* optimized database handling (no more uneccecary database transactions)
+* cleaned up unused code 
+* changed output charset (utf8)
+* Altered output with a spinner. 
+* Fixed a bug where the playlist could only be 50 tracks.
+* Added some command line options.
+
+
+
 1.4:
 Releaseder now creates a local cache of the spotify API. I recommend to delete dump.json and let recentlier build this cache from scratch. 
 For all new transactions with spotify API, releaseder will store a local copy of that transaction, so next time recentlier runs, it will not expend transactions on the API, but instead use the locally stored cache. It will always look for new content though.
@@ -41,5 +52,6 @@ update_interval = 0
 client_secret =   
 client_id =   
 callback =   
+cache = yes
 
-Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes.
+Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes or higher.

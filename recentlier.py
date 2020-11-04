@@ -7,7 +7,7 @@ import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, checkforupdate, track_name, Spinner, arguments
+from recentlier.div import _dump, checkforupdate, Spinner, arguments
 from spotipy.client import SpotifyException
 import traceback
 
@@ -27,14 +27,9 @@ checkforupdate()
 def collect():
     def writedump():
         ''' write the dumpfile '''
-        #x = sqlite3.connect('cache.db')
-        #conn = x.cursor()
-        #query = 'REPLACE INTO cache VALUES(?, ?)'
         with open('dump.json', 'w') as brrt:
             brrt.write(json.dumps(collector.tracklist, sort_keys=True))
         brrt.close()
-        #conn.execute(query, ['jsondump', json.dumps(collector.tracklist, sort_keys=True)])
-        #x.commit()
     dump = _dump()
     spin = Spinner('dna', 0, static=0)
     found_item = False
@@ -49,7 +44,7 @@ def collect():
         a +=1
         # get albums from artist
         for album in collector.get_albums(artist['id']):
-            #spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
+            spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
             # if album has been processed earlier, skip this album.
             if dump:
                 if album['id'] in dump['albums']:
@@ -76,9 +71,9 @@ def collect():
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
                                 del buffer[:]      
             
-    #spin.end()                    
+    spin.end()                    
     if dump and found_item is False:     
-        #spin.tick(text='{}: Nothing new.'.format(datetime.now().strftime("%X %x")))
+        spin.tick(text='{}: Nothing new.'.format(datetime.now().strftime("%X %x")))
         return False
     elif not dump and not found_item:
         print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')

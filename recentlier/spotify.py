@@ -4,12 +4,12 @@ import json, spotipy.util,sys, datetime, traceback, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
 from recentlier.div import track_name, Spinner
-spin = Spinner('dna', 0, static=1)
+conf = _conf()
+spin = Spinner(conf.st, 0, static=1)
 
 class spot():
     ''' Spot class handles all API queries towards spotify. '''
     def __init__(self):
-        conf = _conf()
         self.debug = False                  # Set to true if --debug (TODO)
         self.tracklist = {}                 # Unsorted tracklist
         self.popped = {}                    # Duplicat track amount
@@ -99,6 +99,7 @@ class spot():
         except:
             username = input('Enter your spotify username: ')
             if username is None:
+                print('Something went very wrong! Please delete .cache, cache.db, .user, and dump.json')
                 sys.exit()
             with open('.user', 'w') as ussr:
                 ussr.write(json.dumps({'username': username}))

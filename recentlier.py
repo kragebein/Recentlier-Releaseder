@@ -32,7 +32,7 @@ def collect():
             brrt.write(json.dumps(collector.tracklist, sort_keys=True))
         brrt.close()
     dump = _dump()
-    spin = Spinner('dna', 0, static=0)
+    spin = Spinner(conf.st, 0, static=0)
     found_item = False
     c = 0
     t = 0
@@ -101,7 +101,7 @@ def collect():
 # loopity whoop
 if int(conf.loop) != 0:
     minutes = int(conf.loop) * 60
-    spin = Spinner('dna', 0)
+    spin = Spinner(conf.st, 0)
     while True:
         countdown = minutes
         try:

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 ''' Some other classes '''
-import os, re, json, requests, sqlite3, sys, traceback
+import os, json, requests, sqlite3, sys, traceback
 
 from recentlier.config import conf
 

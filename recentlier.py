@@ -2,14 +2,15 @@
 ''' Recently Releaseder '''
 # -*- coding: utf-8 -*-
 # pylint: disable=no-name-in-module
-import json, os, sys, time, codecs
+import json, os, sys, time, codecs, traceback
 import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
 from recentlier.div import _dump, checkforupdate, Spinner, arguments
 from spotipy.client import SpotifyException
-import traceback
+from datetime import datetime
+
 
 # this should allow for non-ascii characters to be printed
 if sys.stdout.encoding is None or sys.stdout.encoding == 'ANSI_X3.4-1968':

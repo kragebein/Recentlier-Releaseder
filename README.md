@@ -11,7 +11,7 @@ Unlike spotify's "Recently Released"-list that is dynamically updated based on s
 * optimized database handling (no more uneccecary database transactions)
 * cleaned up unused code 
 * changed output charset (utf8)
-* Altered output with a spinner. 
+* Altered output with a spinner. (configurable in config: quarter, dna, penor, arrows, box, notes)
 * Fixed a bug where the playlist could only be 50 tracks.
 * Added some command line options.
 
@@ -28,10 +28,6 @@ Will create a new file: cache.db
 
 **Installing:**
 > pip3 install -f requirements.txt
-
-The tool tries to remove any duplicate tracks from labels that re-upload old songs instead of using the old tracks that already exists.
-
-It works by sifting through every album, every single and every track that your artists have published on spotify, it removes duplicates, sorts it by date and inserts the newest tracks into your list. 
 
 A json dump of the albums and tracks are stored locally and will be used the next time recentlier is beeing run. Delete it to start fresh.
 
@@ -53,5 +49,13 @@ client_secret =
 client_id =   
 callback =   
 cache = yes
+spinner = quarter
 
 Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes or higher.
+
+**note
+First time you run the script, it will take a while, because it needs to build the cache database and the dump file, in the next runs it will go conciderably faster. 
+
+**bugs:
+If many tracks occupies the same release date, recentlier will sometimes just move tracks around and might append/remove the same tracks over and over again. 
+This is only noticable if you rebuild the dumpfile, but shouldnt happen if you just let 

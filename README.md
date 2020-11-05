@@ -54,8 +54,10 @@ spinner = quarter
 Set update_interval to 0 to stop looping, otherwise set it in minutes. Be wary of spotifys rate limiting and set it to something reasonable, like 15 minutes or higher.
 
 **note**
+
 First time you run the script, it will take a while, because it needs to build the cache database and the dump file, in the next runs it will go conciderably faster. 
 
 **bugs**
+
 If many tracks occupies the same release date, recentlier will sometimes just move tracks around and might append/remove the same tracks over and over again. 
 This is only noticable if you rebuild the dumpfile, but shouldnt happen if you just let 

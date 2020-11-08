@@ -98,6 +98,20 @@ def collect():
     else:
         print('We met an unkonwn condition, exiting')
         return False
+
+def checktime():
+    ''' Returns true if timer is reached '''
+    if not conf.runtime:
+        return False
+    now = datetime.now()
+    current = str(now.strftime("%H:%M:%S"))
+    runtime = str(datetime.strptime(conf.runtime, "%H:%M:%S")).split(' ')[1]
+    if current == runtime:
+        return True
+    else:
+        return False
+    
+
 # loopity whoop
 if int(conf.loop) != 0:
     minutes = int(conf.loop) * 60
@@ -108,16 +122,19 @@ if int(conf.loop) != 0:
             collector = spot()
             collect()
         except SpotifyException:
-            ''' token has expired, we think lets do this again '''
+            ''' token has expired, initialize spot again. '''
             collector = spot()
             collect()
         except Exception as r:
             traceback.print_exc() 
         # Spinners for everyone!
-        for x in range(0, minutes): 
+        for x in range(0, minutes):
             if countdown == 0:
                 break
             for y in range(0, 10): 
+                if checktime():
+                    countdown = 0
+                    break
                 # Smoother spinner.
                 spin.tick(text='waiting for {}'.format(str(int(countdown/60)) + ' minutes..' if int(countdown/60) >= 1 else str(int(countdown)) + ' seconds..'))
                 time.sleep(0.1)
@@ -126,6 +143,3 @@ if int(conf.loop) != 0:
 else:
     collector = spot()
     collect()
-
-if os.name == 'nt':
-    input('Press enter to close window.')

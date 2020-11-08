@@ -3,7 +3,7 @@
 import json, spotipy.util,sys, datetime, traceback, sqlite3
 import spotipy.util as util
 from recentlier.config import conf as _conf
-from recentlier.div import track_name, Spinner
+from recentlier.div import track_name, Spinner, iso_name
 conf = _conf()
 spin = Spinner(conf.st, 0, static=1)
 
@@ -235,7 +235,7 @@ class spot():
                 artistName = track[i][2].strip()
                 trackName = track[i][3].strip()
                 releaseDate = track[i][5] 
-            except Exception as R:
+            except Exception:
                 traceback.print_exc()
                 break # print stack and continue with next iteration
             if len(releaseDate) == 4: 
@@ -265,12 +265,14 @@ class spot():
 
     def updateplaylist(self):
         ''' 
-        Actuallay fill up the playlist.  
+        Populate online playlist  
         '''
-        # Collect the datasets
+        
+        preventDuplicates = []
         playlist = self.sort()
         playlist_id = self.genplaylist()
         playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
+
         length = len(playlist_tracks['items'])
         # if empty, add everything to playlist
         if length == 0:
@@ -279,14 +281,22 @@ class spot():
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
             return True
 
-        # Add, remove, compare and adjust. 
+        # Add, remove, compare - preventDupliacte Fixes issues/2
         current_id = []
         for track in playlist_tracks['items']:
             current_id.append(track['track']['id'])
+            preventDuplicates.append(iso_name(self.tracklist, track))
+        
+        for x in playlist.copy():
+            if iso_name(self.tracklist, x) in preventDuplicates:
+                playlist.pop(x)
+
         comparison = []
         in_tracks = []
         comparison = self.diff(current_id, playlist)
         in_tracks = self.diff(playlist, current_id)
+
+
 
         # sorted data is identical to online playlist
         if current_id == playlist:
@@ -307,15 +317,17 @@ class spot():
             return True
         
         # Gracefully update the playlist. 
-        if len(comparison) > 1:
-            spin.tick(text='There are {} new tracks'.format(len(comparison)))
-            start_pos = int(self.plsize) - len(comparison)
+        if len(in_tracks) > 1:
+            spin.tick(text='There are {} new tracks'.format(len(in_tracks)))
+            start_pos = int(self.plsize) - len(in_tracks)
             for i in set(playlist).difference(current_id):
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-            for i in comparison:
-                spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
-            self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
+            if len(comparison) != 0:
+                for i in comparison:
+                    spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
+                self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
+
             for i in in_tracks: # Adjust the position of the newly added tracks
                 for placement, trackid in enumerate(playlist):
                     if i == trackid:

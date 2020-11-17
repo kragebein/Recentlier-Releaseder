@@ -53,26 +53,6 @@ def arguments(args):
         print('Try \n{} --help'.format(args[0]))
         sys.exit(0)
 
-def _dump():
-    '''tries to load already parsed data'''
-    if os.path.exists('dump.json'):
-        with open('dump.json', 'r') as dumpfile:
-            dump = json.loads(dumpfile.read())
-            return dump
-    else:
-        return False
-def sql_dump():
-    '''tries to load already parsed data'''
-    if os.path.exists('cache.db'):
-        with sqlite3.connect('cache.db') as x:
-            cur = x.cursor()
-            data = cur.execute('SELECT value FROM cache WHERE url = "jsondump";').fetchone()
-            if data != None:
-                return json.loads(data[0])
-            else:
-                return False
-            
-
 def checkforupdate():
     config = conf()
     with open('version', 'r') as version:
@@ -215,7 +195,7 @@ class Spinner():
 
     def tick(self, text):
         self.text = text
-        if self.ticks >= self.spinner[self.type]['tick']:
+        if self.ticks > self.spinner[self.type]['tick']:
             self.ticks = 1
         space = []
         for x in range(0, len(self.prevtext)):

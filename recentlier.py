@@ -7,7 +7,7 @@ import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
 from recentlier.config import conf as _conf
-from recentlier.div import _dump, checkforupdate, Spinner, arguments
+from recentlier.div import checkforupdate, Spinner, arguments
 from spotipy.client import SpotifyException
 from datetime import datetime
 
@@ -26,13 +26,8 @@ if len(sys.argv) > 1:
 conf = _conf()
 checkforupdate()
 def collect():
-    def writedump():
-        ''' write the dumpfile '''
-        with open('dump.json', 'w') as brrt:
-            brrt.write(json.dumps(collector.tracklist, sort_keys=True))
-        brrt.close()
-    dump = _dump()
-    spin = Spinner(conf.st, 0, static=0)
+
+    spin = Spinner(conf.st, 0, static=1)
     found_item = False
     c = 0
     t = 0
@@ -44,12 +39,9 @@ def collect():
     for artist in collector.get_artists():
         a +=1
         # get albums from artist
+        spin.tick(text='parsing {}..'.format(artist['name'])) # loading bar text, leave empty for none
         for album in collector.get_albums(artist['id']):
-            spin.tick(text='parsing {}..'.format(album['name'])) # loading bar text, leave empty for none
             # if album has been processed earlier, skip this album.
-            if dump:
-                if album['id'] in dump['albums']:
-                    break
             albums.append(album['id'])
             album_name = album['name']
             #get tracks from album
@@ -72,45 +64,15 @@ def collect():
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
                                 del buffer[:]      
             
-    spin.end()                    
-    if dump and found_item is False:     
-        spin.tick(text='{}: Nothing new.'.format(datetime.now().strftime("%X %x")))
-        return False
-    elif not dump and not found_item:
-        print('Whoah there.. Couldnt find ANYTHING. Are you sure you are following artists?')
-        return False
-    elif dump and found_item:
-        collector.tracklist.update({'username': collector.username, 'tracks': dump['tracks'], 'albums': dump['albums'], 'popped': dump['popped']}) # Include old dump
-        for i in albums:
-            collector.tracklist['albums'].append(i)
-        for i in track_data:
-            collector.tracklist['tracks'].update({i: track_data[i]})
-        for i in collector.popped:
-            collector.tracklist['popped'].append(i)
-        collector.updateplaylist()
-        writedump()
-        return True
-    elif not dump and found_item:
-        collector.tracklist.update({'username': collector.username, 'tracks': track_data, 'albums': albums, 'popped': collector.popped})
-        collector.updateplaylist()
-        writedump()
-        return True
-    else:
-        print('We met an unkonwn condition, exiting')
-        return False
+    spin.end()
+    return True if found_item == True else False
 
 def checktime():
     ''' Returns true if timer is reached '''
     if not conf.runtime:
         return False
     now = datetime.now()
-    current = str(now.strftime("%H:%M:%S"))
-    runtime = str(datetime.strptime(conf.runtime, "%H:%M:%S")).split(' ')[1]
-    if current == runtime:
-        return True
-    else:
-        return False
-    
+    return True if str(now.strftime("%H:%M:%S")) == conf.runtime else False
 
 # loopity whoop
 if int(conf.loop) != 0:

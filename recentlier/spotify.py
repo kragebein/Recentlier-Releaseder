@@ -304,38 +304,11 @@ class spot():
             return True
 
         # If we need to update everything, might as well just swap out everything.
-        if len(comparison) > int(self.plsize): # self.plsize
+        if len(comparison) > int(self.plsize) or len(in_tracks) > 1: # self.plsize
             spin.tick(text='Flushing playlist.')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in playlist:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-            return True
-
-        # We dont need to do anything, how have the user even reached this code?
-        if len(comparison) == self.plsize:
-            spin.tick(text='Playlist doesnt need updating, local list and playlist are the same size. ')
-            return True
-        
-        # Gracefully update the playlist. 
-        if len(in_tracks) > 1:
-            spin.tick(text='There are {} new tracks'.format(len(in_tracks)))
-            start_pos = int(self.plsize) - len(in_tracks)
-            for i in set(playlist).difference(current_id):
-                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-            if len(comparison) != 0:
-                for i in comparison:
-                    spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
-                self.sp.user_playlist_remove_all_occurrences_of_tracks(self.myid, playlist_id, comparison)
-            self.sp.user_playlist_add_tracks(self.myid, playlist_id, in_tracks)
-
-            for i in in_tracks: # Adjust the position of the newly added tracks
-                for placement, trackid in enumerate(playlist):
-                    if i == trackid:
-                        self.sp.user_playlist_reorder_tracks(self.myid, playlist_id, start_pos, placement)
-                        start_pos +=1
-                        break 
-                    else:
-                        continue
             return True
 
     def addtoplaylist(self, playlist_id, playlist):

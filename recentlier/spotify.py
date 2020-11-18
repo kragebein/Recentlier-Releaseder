@@ -11,10 +11,11 @@ class spot():
     ''' Spot class handles all API queries towards spotify. '''
     def __init__(self):
         self.debug = False                  # Set to true if --debug (TODO)
-        self.tracklist = {}                 # Unsorted tracklist
+        self.tracklist = {'tracks': {}}     # Unsorted tracklist
         self.popped = {}                    # Duplicat track amount
         self.plname = conf.playlist_name    # Playlist name
         self.plsize = int(conf.playlist_size)# Playlist size
+        self.online_playlist = None         # What tracks we have on the online list
         self.follow = []                    # Follow list
         self.albums = {}                    # Albums list from all follow artists
         self.get_artists_total = ''         # how many artists in total
@@ -200,6 +201,7 @@ class spot():
 
     def genplaylist(self):
         '''Locate or create the playlist in config '''
+        playlist_id = None
         def gp(pl_data):
             for i in pl_data['items']:
                 if self.username in i['owner']['id']:
@@ -215,12 +217,14 @@ class spot():
                 playlist_id = i
         try:
             playlist_id
-        except NameError:
+        except NameError:  
+            # we have now looked everywhere for the playlist, but unable to find it, so we'll create one instead.
             playlist_create = self.sp.user_playlist_create(self.myid, self.plname, public=False)
-            self.sp.user_playlist
+            self.sp.user_playlist()
             playlist_id = playlist_create['id']
         self.tracklist.update({'playlist_id': playlist_id})
-        return playlist_id
+        self.online_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
+        return (playlist_id, self.online_tracks)
         
     def sort(self):
         ''' 31.10.20: Sort function rewrite'''
@@ -270,21 +274,20 @@ class spot():
         
         preventDuplicates = []
         playlist = self.sort()
-        playlist_id = self.genplaylist()
-        playlist_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
-
-        length = len(playlist_tracks['items'])
+        playlist_id, online_playlist_data = self.genplaylist()
+        
+        online_length = len(online_playlist_data['items'])
         # if empty, add everything to playlist
-        if length == 0:
+        if online_length == 0:
             self.addtoplaylist(playlist_id, playlist)
             for i in playlist:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
-            return True
+            return True   
 
         # Add, remove, compare - preventDupliacte Fixes issues/2
-        current_id = []
-        for track in playlist_tracks['items']:
-            current_id.append(track['track']['id'])
+        online_playlist = []
+        for track in online_playlist_data['items']:
+            online_playlist.append(track['track']['id'])
             preventDuplicates.append(iso_name(self.tracklist, track))
         
         for x in playlist.copy():
@@ -293,23 +296,24 @@ class spot():
 
         comparison = []
         in_tracks = []
-        comparison = self.diff(current_id, playlist)
-        in_tracks = self.diff(playlist, current_id)
-
-
-
+        comparison = self.diff(online_playlist, playlist)
+        in_tracks = self.diff(playlist, online_playlist)
         # sorted data is identical to online playlist
-        if current_id == playlist:
+        if online_playlist == playlist:
             spin.tick(text='Online playlist and local sorted list are the same.')
             return True
 
         # If we need to update everything, might as well just swap out everything.
-        if len(comparison) > int(self.plsize) or len(in_tracks) > 1: # self.plsize
+        if len(comparison) > int(self.plsize) or len(in_tracks) > 0: # self.plsize
             spin.tick(text='Flushing playlist.')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
-            for i in playlist:
+            for i in in_tracks:
+                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
+            for i in comparison:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
             return True
+
+   
 
     def addtoplaylist(self, playlist_id, playlist):
         ''' dump sorted tracks into playlist'''

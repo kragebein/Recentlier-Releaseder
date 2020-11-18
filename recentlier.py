@@ -26,8 +26,6 @@ if len(sys.argv) > 1:
 conf = _conf()
 checkforupdate()
 def collect():
-
-    spin = Spinner(conf.st, 0, static=1)
     found_item = False
     c = 0
     t = 0
@@ -65,6 +63,14 @@ def collect():
                                 del buffer[:]      
             
     spin.end()
+    if found_item == True:
+        for i in track_data:
+            collector.tracklist['tracks'].update({i: track_data[i]})
+        collector.updateplaylist()
+        return True
+    elif found_item == False:
+        return False
+
     return True if found_item == True else False
 
 def checktime():

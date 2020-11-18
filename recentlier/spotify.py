@@ -310,7 +310,7 @@ class spot():
             for i in in_tracks:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
             for i in comparison:
-                spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
+                spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
             return True
 
    

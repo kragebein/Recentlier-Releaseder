@@ -303,9 +303,9 @@ class spot():
             spin.tick(text='Online playlist and local sorted list are the same.')
             return True
 
-        # If we need to update everything, might as well just swap out everything.
+        # gracefully update the playlist
         if len(comparison) > int(self.plsize) or len(in_tracks) > 0: # self.plsize
-            spin.tick(text='Flushing playlist.')
+            spin.tick(text='Updating')
             self.sp.user_playlist_replace_tracks(self.myid, playlist_id, playlist)
             for i in in_tracks:
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
@@ -313,13 +313,14 @@ class spot():
                 spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
             return True
 
-   
-
     def addtoplaylist(self, playlist_id, playlist):
         ''' dump sorted tracks into playlist'''
+        now = datetime.datetime.now()
+        updatetime = now.strftime("%M/%D %H:%M:%S")
         try:
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
             spin.tick('Updated playlist with {} tracks'.format(self.plsize))
+            self.sp.user_playlist_change_details(self.myid, playlist_id, description='[{}] {} new tracks'.format(updatetime, self.plsize))
         except Exception:
             traceback.print_exc()
 

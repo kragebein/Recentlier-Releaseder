@@ -311,16 +311,19 @@ class spot():
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
             for i in comparison:
                 spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
+            self.desc(playlist_id)
             return True
-
-    def addtoplaylist(self, playlist_id, playlist):
-        ''' dump sorted tracks into playlist'''
+    def desc(self, i):
+        ''' Updates playlist metadata '''
         now = datetime.datetime.now()
         updatetime = now.strftime("%M/%D %H:%M:%S")
+        self.sp.user_playlist_change_details(self.myid, i, description='[{}] {} new tracks'.format(updatetime, self.plsize))
+    def addtoplaylist(self, playlist_id, playlist):
+        ''' dump sorted tracks into playlist'''
         try:
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
             spin.tick('Updated playlist with {} tracks'.format(self.plsize))
-            self.sp.user_playlist_change_details(self.myid, playlist_id, description='[{}] {} new tracks'.format(updatetime, self.plsize))
+            self.desc(playlist_id)
         except Exception:
             traceback.print_exc()
 

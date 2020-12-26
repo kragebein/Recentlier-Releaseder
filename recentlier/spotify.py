@@ -220,7 +220,7 @@ class spot():
         except NameError:  
             # we have now looked everywhere for the playlist, but unable to find it, so we'll create one instead.
             playlist_create = self.sp.user_playlist_create(self.myid, self.plname, public=False)
-            self.sp.user_playlist()
+            #self.sp.user_playlist()
             playlist_id = playlist_create['id']
         self.tracklist.update({'playlist_id': playlist_id})
         self.online_tracks = self.sp.user_playlist_tracks(self.myid,playlist_id=playlist_id)
@@ -311,19 +311,20 @@ class spot():
                 spin.tick(text='[+] {}'.format(track_name(self.tracklist, i)))
             for i in comparison:
                 spin.tick(text='[-] {}'.format(track_name(self.tracklist, i)))
-            self.desc(playlist_id)
+            self.desc(playlist_id, playlist)
             return True
-    def desc(self, i):
+
+    def desc(self, i, playlist):
         ''' Updates playlist metadata '''
         now = datetime.datetime.now()
-        updatetime = now.strftime("%M/%D %H:%M:%S")
-        self.sp.user_playlist_change_details(self.myid, i, description='[{}] {} new tracks'.format(updatetime, self.plsize))
+        updatetime = now.strftime("%m/%d %H:%M:%S")
+        self.sp.user_playlist_change_details(self.myid, i, description='[{}] {} new tracks'.format(updatetime, len(playlist)))
     def addtoplaylist(self, playlist_id, playlist):
         ''' dump sorted tracks into playlist'''
         try:
             self.sp.user_playlist_add_tracks(self.myid, playlist_id, playlist)
             spin.tick('Updated playlist with {} tracks'.format(self.plsize))
-            self.desc(playlist_id)
+            self.desc(playlist_id, playlist)
         except Exception:
             traceback.print_exc()
 

@@ -33,8 +33,13 @@ class spot():
         self.cid = conf.cid                 # Client Key
         self.cic = conf.cic                 # Client Secret
         self.callback = conf.callback       # Callback URL.
+        self.cache = {}                     # Temporary database storage
+        self.trans_wrote = 0                # Transactions written to database
+        self.trans_fetch = 0
+
 
         self.x = sqlite3.connect('cache.db')
+        self.x.row_factory = sqlite3.Row
         self.sql = self.x.cursor()
         self.scope = 'playlist-read-private, user-follow-read, playlist-modify-private'
         self.login()
@@ -45,7 +50,8 @@ class spot():
             self.sp._get = self._get
             self.sql.execute('CREATE TABLE IF NOT EXISTS cache (url TEXT, value BLOB);')
             self.x.commit()
-
+            for data in self.sql.execute('SELECT * FROM cache').fetchall():
+                self.cache[data['url']] = data['value']
     def login(self):
         try: 
             token = util.prompt_for_user_token(self.username, \
@@ -61,7 +67,7 @@ class spot():
         except:
             print('Error: Couldnt validate token! Try deleting .cache-{}'.format(self.username))
             exit()
-            
+    
     # rewrite spotipy internals to allow caching.
     def _get(self, url, args=None, payload=None, **kwargs):   
         if args:
@@ -79,11 +85,15 @@ class spot():
         if not url.startswith('http'):
             url = prefix + url
         if method == 'get':
-            query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
-            data = self.sql.execute(query).fetchone()
-            #print('SQL:(CACHE) fetching {}'.format(url) if data is not None else 'SQL:(API) fetching {}'.format(url))
-            return data[0] if data is not None else False
+            self.trans_fetch += 1
+            # TEST: Load db into memory, see if we run faster.
+            #query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
+            #data = self.sql.execute(query).fetchone()
+            #print('SQL:(CACHE) fetching {}'.format(url) if url in self.cache else 'SQL:(API) fetching {}'.format(url))
+            return self.cache[url] if url in self.cache else False
+            #return data[0] if data is not None else False
         elif method == 'put':
+            self.trans_wrote += 1
             _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
             if url.startswith(_list):
                 #print('SQL: putting {}'.format(url))
@@ -301,6 +311,7 @@ class spot():
         # sorted data is identical to online playlist
         if online_playlist == playlist:
             spin.tick(text='Online playlist and local sorted list are the same.')
+            
             return True
 
         # gracefully update the playlist
@@ -314,11 +325,12 @@ class spot():
             self.desc(playlist_id, playlist)
             return True
 
-    def desc(self, i, playlist):
+    def desc(self, i, tracks):
         ''' Updates playlist metadata '''
         now = datetime.datetime.now()
         updatetime = now.strftime("%m/%d %H:%M:%S")
-        self.sp.user_playlist_change_details(self.myid, i, description='[{}] {} new tracks'.format(updatetime, len(playlist)))
+        self.sp.user_playlist_change_details(self.myid, i, description='[{}] {} new tracks'.format(updatetime, len(tracks)))
+
     def addtoplaylist(self, playlist_id, playlist):
         ''' dump sorted tracks into playlist'''
         try:

@@ -61,6 +61,7 @@ def collect():
                                 t +=0
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
                                 del buffer[:]      
+    collector.cache = {}    # clear cache from memory
             
     spin.end()
     if found_item == True:
@@ -109,5 +110,6 @@ if int(conf.loop) != 0:
             countdown -= 1
         spin.end()
 else:
+    spin = Spinner(conf.st, 0)
     collector = spot()
     collect()

@@ -47,6 +47,7 @@ def collect():
                 buffer.append(track['id'])
                 if len(buffer) == 50 or len(buffer) >= collector.get_album_tracks_total:
                     # get track details about each track (build buffer) ^
+                    collector.get_audio_features(buffer)  # get track cadence, bpm. 
                     for details in collector.get_track_details(buffer):
                         release_date = details['album']['release_date']
                         track_name = details['name']
@@ -62,6 +63,7 @@ def collect():
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
                                 del buffer[:]      
     collector.cache = {}    # clear cache from memory
+    
             
     spin.end()
     if found_item == True:

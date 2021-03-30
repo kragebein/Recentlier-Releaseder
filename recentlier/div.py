@@ -63,8 +63,7 @@ def checkforupdate():
     def update(update):
         newversion = update['version']
         if newversion > version:
-            print('{} v{}\nNew version available: v{}\nGet it here: https://github.com/kragebein/Recentlier-Releaseder'.format(plname, version, newversion))
- 
+            print(f'{plname} v{version}\nNew version available: v{newversion}\nGet it here: https://github.com/kragebein/Recentlier-Releaseder')
         else:
             print(plname + ' v' + version)
     try:
@@ -76,8 +75,6 @@ def checkforupdate():
         update(upt)
     except:
         pass
-
-blah = r'\d{4}\-\d{1,2}\/\d{1,2}$'
 
 def track_name(list, i):
     ''' Print the the track data from the list'''

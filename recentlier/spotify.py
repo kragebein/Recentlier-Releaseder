@@ -12,6 +12,7 @@ class spot():
     def __init__(self):
         self.debug = False                  # Set to true if --debug (TODO)
         self.tracklist = {'tracks': {}}     # Unsorted tracklist
+        self.features = {}                  # Track features. 
         self.popped = {}                    # Duplicat track amount
         self.plname = conf.playlist_name    # Playlist name
         self.plsize = int(conf.playlist_size)# Playlist size
@@ -34,8 +35,9 @@ class spot():
         self.cic = conf.cic                 # Client Secret
         self.callback = conf.callback       # Callback URL.
         self.cache = {}                     # Temporary database storage
-        self.trans_wrote = 0                # Transactions written to database
-        self.trans_fetch = 0
+        self.trans_wrote = 0                # Items written to database
+        self.trans_fetch = 0                # Items fetched from database
+        self.nameids = []                   # Future use. 
 
 
         self.x = sqlite3.connect('cache.db')
@@ -86,17 +88,14 @@ class spot():
             url = prefix + url
         if method == 'get':
             self.trans_fetch += 1
-            # TEST: Load db into memory, see if we run faster.
-            #query = 'SELECT value FROM cache WHERE url = "{}"'.format(url)
-            #data = self.sql.execute(query).fetchone()
-            #print('SQL:(CACHE) fetching {}'.format(url) if url in self.cache else 'SQL:(API) fetching {}'.format(url))
             return self.cache[url] if url in self.cache else False
-            #return data[0] if data is not None else False
         elif method == 'put':
             self.trans_wrote += 1
-            _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
+            if conf.analysis.lower() == 'yes':
+                _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/', 'https://api.spotify.com/v1/audio-features/')
+            else:
+                _list = ('https://api.spotify.com/v1/tracks/','https://api.spotify.com/v1/albums/')
             if url.startswith(_list):
-                #print('SQL: putting {}'.format(url))
                 query = 'REPLACE INTO cache VALUES(?, ?)'
                 self.sql.execute(query, [url, json.dumps(value)])
                 self.x.commit()
@@ -143,7 +142,7 @@ class spot():
             if result['next'] is None:
                 break
     def get_appears_on(self, artist):
-        result = self.sp.artist_albums(artist, limit=50, album_type='single')
+        result = self.sp.artist_albums(artist, limit=50, album_type='appears_on')
         self.artist_appears_on.update(result)
         while 'next' in result and result['next'] is not None:
             result = self.sp.next(result)
@@ -238,6 +237,7 @@ class spot():
         
     def sort(self):
         ''' 31.10.20: Sort function rewrite'''
+        ''' TODO: Removal of tracks with wrong cadence and BPM '''
         allTracks = {}
         self.unsorted = {}
         track = self.tracklist['tracks']
@@ -339,6 +339,24 @@ class spot():
             self.desc(playlist_id, playlist)
         except Exception:
             traceback.print_exc()
+
+    def get_audio_features(self, _list):
+        ''' Return audio features from list. Maximmum 100 tracks at a time '''
+        for x in self.sp.audio_features(_list):
+            try:
+                id = x['id']                                # Track ID
+                tempo = x['tempo']                          # (float) Tempo (BPM)
+                valence = x['valence']                      # (float 0-1) Positiveness
+                dance = x['danceability']                   # (float 0-1) Danceability
+                loudness = x['loudness']                    # (float -60-0) Loudness
+                key = x['key']                              # (str) key, tone of track
+                instrumentalness = x['instrumentalness']    # float (0-1) Guess if the track is instrumental
+                live = x['liveness']                        # float (0-1) If the track is live or not
+                speech = x['speechiness']                   # If the track contains singing or not.
+                energy = x['energy']                        # Intensity of track
+                self.features[id] = tempo, valence, dance, loudness, key, instrumentalness, live, speech, energy
+            except:
+                pass
 
     def get_single_track_details(self, i):
         '''returns details of a single track'''

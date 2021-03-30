@@ -2,7 +2,7 @@
 ''' Recently Releaseder '''
 # -*- coding: utf-8 -*-
 # pylint: disable=no-name-in-module
-import json, os, sys, time, codecs, traceback
+import json, os, sys, time, codecs, traceback, pytz
 import spotipy.util as util
 from spotipy.client import Spotify 
 from recentlier.spotify import spot
@@ -80,8 +80,8 @@ def checktime():
     ''' Returns true if timer is reached '''
     if not conf.runtime:
         return False
-    now = datetime.now()
-    return True if str(now.strftime("%H:%M:%S")) == conf.runtime else False
+    return True if datetime.now(pytz.timezone('Pacific/Auckland')).strftime("%H:%M:%S") == conf.runtime else False
+    #return True if str(now.strftime("%H:%M:%S")) == conf.runtime else False
 
 # loopity whoop
 if int(conf.loop) != 0:

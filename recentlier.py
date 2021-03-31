@@ -33,6 +33,7 @@ def collect():
     track_data = {}
     albums = []
     buffer = []  
+    buffer_count = 0
     # get artists from followlist
     for artist in collector.get_artists():
         a +=1
@@ -44,8 +45,12 @@ def collect():
             album_name = album['name']
             #get tracks from album
             for track in collector.get_tracks(album['id']):
+                if len(buffer) == 50:
+                    del buffer[:]
+                    buffer_count = 0
                 buffer.append(track['id'])
-                if len(buffer) == 50 or len(buffer) >= collector.get_album_tracks_total:
+                buffer_count += 1
+                if cbuffer(buffer, buffer_count, collector.get_album_tracks_total, album['id'], track['id']):                    
                     # get track details about each track (build buffer) ^
                     collector.get_audio_features(buffer)  # get track cadence, bpm. 
                     for details in collector.get_track_details(buffer):
@@ -61,7 +66,15 @@ def collect():
                                 found_item = True
                                 t +=0
                                 track_data.update({track_id: [album['id'], album_name, artist_name, track_name, artist_id, release_date, album['album_type']]})
-                                del buffer[:]      
+                                del buffer[:]
+                                buffer_count = 0
+                                
+                                
+                                
+                                
+                                
+                                
+
     collector.cache = {}    # clear cache from memory
     
             
@@ -75,6 +88,17 @@ def collect():
         return False
 
     return True if found_item == True else False
+
+def cbuffer(buffer, buffer_count, total, album, track):
+    '''keep track of the buffer'''
+    if conf.debug == '1':
+        print(f'{len(buffer)} - {buffer_count} > {total}>>id:{album}>{track}')
+    if len(buffer) >= 50:
+        return True
+    if buffer_count == total:
+        return True
+    return False
+
 
 def checktime():
     ''' Returns true if timer is reached '''
@@ -93,7 +117,7 @@ if int(conf.loop) != 0:
             collector = spot()
             collect()
         except SpotifyException:
-            ''' token has expired, initialize spot again. '''
+            ''' token has expired, reinitialize spot'''
             collector = spot()
             collect()
         except Exception as r:

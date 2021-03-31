@@ -133,10 +133,11 @@ class spot():
             yield i
 
     def get_collection(self, artist):
-        result = self.sp.artist_albums(artist, limit=50, album_type='collection')
+        result = self.sp.artist_albums(artist, limit=50, album_type='collections')
         self.artist_collection.update(result)
         while 'next' in result and result['next'] is not None:
             result = self.sp.next(result)
+
             for i in result['items']:
                 self.artist_collection['items'].append(i)
             if result['next'] is None:
@@ -162,24 +163,27 @@ class spot():
         
     def get_albums(self, artist):
         ''' albums and singles generator '''
-        self.get_albums_singles(artist)
-        result = self.sp.artist_albums(artist, limit=50, album_type='album')
-        self.artist_albums.update(result)
-        while 'next' in result and result['next'] is not None:
-            result = self.sp.next(result)
-            for i in result['items']:
-                self.artist_albums['items'].append(i)
-            #self.artist_albums.update(result)
-            if result['next'] is None:
-                break
-        for i in self.artist_singles['items']:
-            yield i
-        for i in self.artist_albums['items']:
-            yield i
+        _list = ['album', 'single', 'appears_on', 'compilation']
+        for _type in _list:
+            #self.get_collection(artist)
+            result = self.sp.artist_albums(artist, limit=50, album_type=_type)
+            self.artist_albums.update(result)
+            while 'next' in result and result['next'] is not None:
+                result = self.sp.next(result)
+                for i in result['items']:
+                    self.artist_albums['items'].append(i)
+                #self.artist_albums.update(result)
+                if result['next'] is None:
+                    break
+            for i in self.artist_albums['items']:
+                yield i
+
+        #for i in self.artist_singles['items']:
+            #yield i
         #for i in self.artist_collection['items']:
-        #    yield i
+            #yield i
         #for i in self.artist_appears_on['items']:
-        #    yield i
+            #yield i
 
     def get_tracks(self, album):
         ''' album tracks generator '''
@@ -199,6 +203,7 @@ class spot():
 
     def get_track_details(self, tracklist):
         ''' track detail generator '''
+        
         tracks = {}
         result = self.sp.tracks(tracklist)
         tracks.update(result)
